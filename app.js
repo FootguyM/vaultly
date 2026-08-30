@@ -13,26 +13,26 @@
 
   /* ---------------------------------------------------------------- catalog */
   var CATALOG = [
-    { id:'amazon',    name:'Amazon',           cat:'Shopping',  c1:'#ff9900', c2:'#232f3e', amounts:[10,25,50,100,250] },
-    { id:'steam',     name:'Steam',            cat:'Gaming',    c1:'#1b2838', c2:'#66c0f4', amounts:[10,20,50,100] },
-    { id:'playstore', name:'Google Play',      cat:'Apps',      c1:'#34a853', c2:'#4285f4', amounts:[10,25,50,100] },
-    { id:'apple',     name:'Apple',            cat:'Apps',      c1:'#8e8e93', c2:'#1c1c1e', amounts:[15,25,50,100,200] },
-    { id:'netflix',   name:'Netflix',          cat:'Streaming', c1:'#e50914', c2:'#3d0a0d', amounts:[25,50,100] },
-    { id:'spotify',   name:'Spotify',          cat:'Streaming', c1:'#1db954', c2:'#0b3d21', amounts:[10,30,60] },
-    { id:'playstation',name:'PlayStation',     cat:'Gaming',    c1:'#0070d1', c2:'#00296b', amounts:[10,20,50,100] },
-    { id:'xbox',      name:'Xbox',             cat:'Gaming',    c1:'#107c10', c2:'#0b3b0b', amounts:[10,25,50,100] },
-    { id:'nintendo',  name:'Nintendo eShop',   cat:'Gaming',    c1:'#e60012', c2:'#7a0009', amounts:[10,20,35,50] },
-    { id:'visa',      name:'Prepaid Visa',     cat:'Payments',  c1:'#1a1f71', c2:'#436bd6', amounts:[25,50,100,250,500] },
-    { id:'mastercard',name:'Prepaid Mastercard',cat:'Payments', c1:'#eb001b', c2:'#f79e1b', amounts:[25,50,100,250] },
-    { id:'paypal',    name:'PayPal Balance',   cat:'Payments',  c1:'#003087', c2:'#009cde', amounts:[20,50,100,200] },
-    { id:'btc',       name:'Bitcoin Voucher',  cat:'Crypto',    c1:'#f7931a', c2:'#5c3305', amounts:[25,50,100,250,500] },
-    { id:'eth',       name:'Ethereum Voucher', cat:'Crypto',    c1:'#627eea', c2:'#22243f', amounts:[25,50,100,250] },
-    { id:'usdt',      name:'USDT Voucher',     cat:'Crypto',    c1:'#26a17b', c2:'#0d4033', amounts:[20,50,100,500] },
-    { id:'airbnb',    name:'Airbnb',           cat:'Travel',    c1:'#ff5a5f', c2:'#8c1c3f', amounts:[50,100,250] },
-    { id:'uber',      name:'Uber & Uber Eats', cat:'Travel',    c1:'#111111', c2:'#4a4a4a', amounts:[15,25,50,100] },
-    { id:'ikea',      name:'IKEA',             cat:'Shopping',  c1:'#0058a3', c2:'#ffdb00', amounts:[25,50,100,200] },
-    { id:'zalando',   name:'Zalando',          cat:'Shopping',  c1:'#ff6900', c2:'#2b1a10', amounts:[25,50,100] },
-    { id:'roblox',    name:'Roblox',           cat:'Gaming',    c1:'#e2231a', c2:'#232527', amounts:[10,25,50,100] }
+    { id:'amazon',    name:'Amazon',           cat:'Shopping',  ink:'#87500b', amounts:[10,25,50,100,250] },
+    { id:'steam',     name:'Steam',            cat:'Gaming',    ink:'#1b2838', amounts:[10,20,50,100] },
+    { id:'playstore', name:'Google Play',      cat:'Apps',      ink:'#1d6b3c', amounts:[10,25,50,100] },
+    { id:'apple',     name:'Apple',            cat:'Apps',      ink:'#2b2c2e', amounts:[15,25,50,100,200] },
+    { id:'netflix',   name:'Netflix',          cat:'Streaming', ink:'#8c1116', amounts:[25,50,100] },
+    { id:'spotify',   name:'Spotify',          cat:'Streaming', ink:'#125a2d', amounts:[10,30,60] },
+    { id:'playstation',name:'PlayStation',     cat:'Gaming',    ink:'#123a78', amounts:[10,20,50,100] },
+    { id:'xbox',      name:'Xbox',             cat:'Gaming',    ink:'#155619', amounts:[10,25,50,100] },
+    { id:'nintendo',  name:'Nintendo eShop',   cat:'Gaming',    ink:'#8d1014', amounts:[10,20,35,50] },
+    { id:'visa',      name:'Prepaid Visa',     cat:'Payments',  ink:'#1a1f71', amounts:[25,50,100,250,500] },
+    { id:'mastercard',name:'Prepaid Mastercard',cat:'Payments', ink:'#8d2412', amounts:[25,50,100,250] },
+    { id:'paypal',    name:'PayPal Balance',   cat:'Payments',  ink:'#14356b', amounts:[20,50,100,200] },
+    { id:'btc',       name:'Bitcoin Voucher',  cat:'Crypto',    ink:'#8a5410', amounts:[25,50,100,250,500] },
+    { id:'eth',       name:'Ethereum Voucher', cat:'Crypto',    ink:'#3c4270', amounts:[25,50,100,250] },
+    { id:'usdt',      name:'USDT Voucher',     cat:'Crypto',    ink:'#125946', amounts:[20,50,100,500] },
+    { id:'airbnb',    name:'Airbnb',           cat:'Travel',    ink:'#8d2440', amounts:[50,100,250] },
+    { id:'uber',      name:'Uber & Uber Eats', cat:'Travel',    ink:'#22252a', amounts:[15,25,50,100] },
+    { id:'ikea',      name:'IKEA',             cat:'Shopping',  ink:'#0f4c82', amounts:[25,50,100,200] },
+    { id:'zalando',   name:'Zalando',          cat:'Shopping',  ink:'#7a3a12', amounts:[25,50,100] },
+    { id:'roblox',    name:'Roblox',           cat:'Gaming',    ink:'#8b1912', amounts:[10,25,50,100] }
   ];
   var CATS = ['All','Shopping','Gaming','Streaming','Apps','Payments','Crypto','Travel'];
 
@@ -103,7 +103,7 @@
   }
   function brand(id) {
     for (var i = 0; i < CATALOG.length; i++) if (CATALOG[i].id === id) return CATALOG[i];
-    return { id: id, name: 'Vaultly credit', cat: 'Wallet', c1: '#5b5bd6', c2: '#0ea5a5', amounts: [] };
+    return { id: id, name: 'Vaultly credit', cat: 'Ledger', ink: '#1f5c3d', amounts: [] };
   }
   function timeAgo(ts) {
     var s = Math.floor((Date.now() - ts) / 1000);
@@ -204,7 +204,7 @@
     if (!state.seeded) {
       state.seeded = true;
       state.balance += 25;
-      state.txns.unshift(tx('in', 'Welcome credit', 'Demo balance to try the marketplace', 25));
+      state.txns.unshift(tx('in', 'Opening credit', 'Demo balance for the marketplace', 25));
       /* two ready-to-use demo codes so the console has history from day one */
       state.codes.push(newCode(50, 'Welcome batch'), newCode(20, 'Welcome batch'));
     }
@@ -240,7 +240,7 @@
     entry.redeemed = Date.now();
     entry.redeemedBy = state.user ? state.user.email : 'guest';
     state.balance += entry.amount;
-    state.txns.unshift(tx('in', 'Gift code redeemed', entry.code, entry.amount));
+    state.txns.unshift(tx('in', 'Code presented', entry.code, entry.amount));
     save();
     return { ok: true, amount: entry.amount };
   }
@@ -255,48 +255,66 @@
       ts: Date.now()
     };
     state.owned.unshift(card);
-    state.txns.unshift(tx('out', b.name + ' gift card', money(amount) + ' · instant delivery', -amount));
+    state.txns.unshift(tx('out', b.name + ' instrument', money(amount) + ' · issued', -amount));
     save();
     return { ok: true, card: card };
   }
 
   /* ================================================================== views */
+  /* A stable pseudo-serial per brand, so the plate does not flicker on re-render. */
+  function serialFor(seed) {
+    var h = 0;
+    for (var i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    var out = '';
+    for (var j = 0; j < 8; j++) { out += ALPHABET[h % ALPHABET.length]; h = Math.floor(h / 7) + 13 * (j + 1); }
+    return out.slice(0, 4) + ' ' + out.slice(4);
+  }
+
   function cardFace(b, amount, extraClass) {
-    return '<div class="' + (extraClass || 'gc') + '" style="--c1:' + b.c1 + ';--c2:' + b.c2 + '">' +
-      '<div class="gc-top"><div><div class="gc-brand">' + esc(b.name) + '</div>' +
-      '<div class="gc-cat">' + esc(b.cat) + '</div></div><div class="gc-chip"></div></div>' +
-      '<div class="gc-bottom"><div class="gc-amount">' + (amount ? money(amount) : 'Gift card') + '</div>' +
-      '<div class="gc-logo">VAULTLY</div></div></div>';
+    return '<div class="gc ' + (extraClass || '') + '" style="--c-ink:' + b.ink + '">' +
+      '<div class="gc-main">' +
+        '<div><div class="gc-brand">' + esc(b.name) + '</div>' +
+        '<div class="gc-cat">' + esc(b.cat) + '</div></div>' +
+        '<div class="gc-serial">SER ' + serialFor(b.id + amount) + '</div>' +
+      '</div>' +
+      '<div class="gc-stub">' +
+        '<div class="gc-seal">VY</div>' +
+        '<div><div class="gc-denom">Value</div>' +
+        '<div class="gc-amount">' + (amount ? money(amount) : '—') + '</div></div>' +
+      '</div>' +
+    '</div>';
   }
 
   /* ---------------------------------------------------------------- shop */
   var shopFilter = { q: '', cat: 'All' };
 
   function viewShop() {
-    var b1 = brand('amazon'), b2 = brand('btc'), b3 = brand('steam');
     return '' +
     '<section class="hero"><div class="hero-grid">' +
       '<div>' +
-        '<span class="eyebrow">' + ICON.bolt + ' One wallet · every brand</span>' +
-        '<h1 style="margin-top:14px">Every gift card,<br>one balance.</h1>' +
-        '<p class="lede">Vaultly turns any gift card, voucher or prepaid balance into spendable credit — then lets you buy a card for anything else. Redeem in seconds, swap between 20+ brands, keep it all in a single wallet.</p>' +
+        '<span class="eyebrow">Clearing house for stored value</span>' +
+        '<h1 style="margin-top:18px">Every gift card,<br>one ledger.</h1>' +
+        '<p class="lede">A gift card is money locked to one shop. Vaultly accepts any card, voucher or prepaid balance, books it into a single ledger, and lets you draw a new card on any other brand — or cash the balance out.</p>' +
         '<div class="hero-cta">' +
-          '<a class="btn btn-primary btn-lg" href="#/redeem" data-link>' + ICON.gift + ' Redeem a code</a>' +
-          '<a class="btn btn-ghost btn-lg" href="#/about" data-link>How it works</a>' +
+          '<a class="btn btn-primary btn-lg" href="#/redeem" data-link>Redeem a code</a>' +
+          '<a class="btn btn-ghost btn-lg" href="#/about" data-link>Read the concept</a>' +
         '</div>' +
-        '<div class="hero-trust">' +
-          '<div>' + ICON.check + ' Instant delivery</div>' +
-          '<div>' + ICON.check + ' No card fees</div>' +
-          '<div>' + ICON.check + ' 20+ brands &amp; currencies</div>' +
-        '</div>' +
+        '<dl class="hero-trust">' +
+          '<div><dt>20+</dt><dd>Brands accepted</dd></div>' +
+          '<div><dt>0%</dt><dd>Card fees</dd></div>' +
+          '<div><dt>&lt;1s</dt><dd>Delivery</dd></div>' +
+        '</dl>' +
       '</div>' +
-      '<div class="showcase">' + cardFace(b1, 50) + cardFace(b2, 100) + cardFace(b3, 25) + '</div>' +
+      '<div class="specimen">' +
+        cardFace(brand('btc'), 100) +
+        '<div class="specimen-cap">Specimen · not redeemable</div>' +
+      '</div>' +
     '</div></section>' +
 
     '<section class="section" id="market">' +
       '<div class="section-head"><div><h2>Marketplace</h2>' +
-      '<p>Pay from your Vaultly balance. Codes are delivered to your wallet the moment you confirm.</p></div>' +
-      '<span class="pill pill-accent">' + ICON.bolt + ' Instant delivery</span></div>' +
+      '<p>Drawn against your ledger balance. The code is issued and shown to you the moment you confirm.</p></div>' +
+      '<span class="pill pill-accent">Instant issue</span></div>' +
 
       '<div class="toolbar">' +
         '<div class="search">' + ICON.search +
@@ -311,18 +329,18 @@
     '</section>' +
 
     '<section class="section">' +
-      '<div class="card card-pad" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:22px">' +
-        trustBlock(ICON.shield, 'Escrow-style checkout', 'Balance only leaves your wallet once a code is issued and shown to you.') +
-        trustBlock(ICON.bolt, 'Delivered in seconds', 'No queues, no shipping — every card lands straight in your wallet.') +
-        trustBlock(ICON.globe, '20+ brands, 1 balance', 'Shopping, gaming, streaming, prepaid cards and crypto vouchers side by side.') +
-        trustBlock(ICON.chat, 'Human support', 'Verification and payouts are reviewed by our support team, never a bot.') +
+      '<div class="feature-grid">' +
+        trustBlock(ICON.shield, 'Debited on issue', 'Your balance only moves once the code exists and is on screen in front of you.') +
+        trustBlock(ICON.bolt, 'Issued in under a second', 'No queue, no shipping, no waiting room — the instrument is drawn immediately.') +
+        trustBlock(ICON.globe, 'Twenty brands, one figure', 'Shopping, gaming, streaming, prepaid cards and crypto vouchers, all in one currency.') +
+        trustBlock(ICON.chat, 'Reviewed by people', 'Verification and payouts are cleared by the support desk, never by an automated rule.') +
       '</div>' +
     '</section>';
   }
 
   function trustBlock(icon, title, body) {
-    return '<div><div class="feature-ico">' + icon + '</div><h3>' + esc(title) + '</h3>' +
-      '<p class="muted small" style="margin-top:5px">' + esc(body) + '</p></div>';
+    return '<div class="feature"><div class="feature-ico">' + icon + '</div><h3>' + esc(title) + '</h3>' +
+      '<p>' + esc(body) + '</p></div>';
   }
 
   function brandCards() {
@@ -339,7 +357,7 @@
     return list.map(function (b) {
       var lo = b.amounts[0], hi = b.amounts[b.amounts.length - 1];
       return '<button class="brand-card" data-act="open-brand" data-id="' + b.id + '">' +
-        cardFace(b, 0) +
+        cardFace(b, 0, 'gc-sm') +
         '<div class="brand-meta"><strong>' + esc(b.name) + '</strong>' +
         '<span class="brand-range">' + money(lo) + '–' + money(hi) + '</span></div>' +
       '</button>';
@@ -350,18 +368,18 @@
     var b = brand(id);
     var pick = b.amounts[1] || b.amounts[0];
     openModal('Buy ' + b.name, '' +
-      '<div style="max-width:250px;margin:0 auto 18px">' + cardFace(b, pick, 'gc') + '</div>' +
-      '<div class="field" style="margin-bottom:14px"><label>Choose an amount</label>' +
+      '<div style="margin-bottom:18px">' + cardFace(b, pick) + '</div>' +
+      '<div class="field" style="margin-bottom:16px"><label>Denomination</label>' +
         '<div class="amount-grid" id="amtGrid">' + b.amounts.map(function (a) {
           return '<button class="amt' + (a === pick ? ' sel' : '') + '" data-act="pick-amt" data-amt="' + a + '">' + money(a) + '</button>';
         }).join('') + '</div>' +
       '</div>' +
-      '<div class="spread small muted" style="padding:10px 12px;background:var(--surface-3);border-radius:11px">' +
-        '<span>Wallet balance</span><strong class="mono" style="color:var(--text)">' + money(state.balance) + '</strong></div>' +
+      '<div class="spread" style="padding:9px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)">' +
+        '<span class="caps">Ledger balance</span><span class="mono" style="font-size:13px">' + money(state.balance) + '</span></div>' +
       '<div id="buyWarn"></div>' +
-      '<button class="btn btn-primary btn-block btn-lg" style="margin-top:14px" data-act="confirm-buy" data-id="' + b.id + '">' +
-        'Pay ' + money(pick) + ' from wallet</button>' +
-      '<p class="tiny muted center" style="margin-top:10px">Prototype checkout — no payment is processed and no real code is issued.</p>'
+      '<button class="btn btn-primary btn-block btn-lg" style="margin-top:16px" data-act="confirm-buy" data-id="' + b.id + '">' +
+        'Draw for ' + money(pick) + '</button>' +
+      '<p class="tiny muted center" style="margin-top:12px">Prototype — nothing is charged and no real instrument is issued.</p>'
     );
     syncBuyButton(pick);
   }
@@ -371,35 +389,35 @@
     if (!btn) return;
     btn.dataset.amt = amount;
     var short = amount > state.balance;
-    btn.textContent = short ? 'Not enough balance' : 'Pay ' + money(amount) + ' from wallet';
+    btn.textContent = short ? 'Insufficient balance' : 'Draw for ' + money(amount);
     btn.disabled = short;
     $('#buyWarn').innerHTML = short
-      ? '<div class="notice notice-accent" style="margin-top:12px">' + ICON.info +
-        '<div><div class="notice-title">Top up first</div><div class="notice-body">Redeem a gift code to add ' +
-        money(amount - state.balance) + ' to your wallet, then come back.</div>' +
-        '<a class="btn btn-sm btn-primary" style="margin-top:10px" href="#/redeem" data-link data-act="close-modal">Redeem a code</a></div></div>'
+      ? '<div class="notice notice-accent" style="margin-top:14px">' + ICON.info +
+        '<div><div class="notice-title">Credit the ledger first</div><div class="notice-body">Present a code worth ' +
+        money(amount - state.balance) + ' or more, then draw again.</div>' +
+        '<a class="btn btn-sm btn-primary" style="margin-top:12px" href="#/redeem" data-link data-act="close-modal">Redeem a code</a></div></div>'
       : '';
   }
 
   /* -------------------------------------------------------------- redeem */
   function viewRedeem() {
     return '<section class="section redeem-wrap">' +
-      '<div class="center" style="margin-bottom:22px">' +
-        '<span class="eyebrow">' + ICON.gift + ' Redeem</span>' +
-        '<h1 style="margin-top:12px">Turn a code into balance</h1>' +
-        '<p class="muted" style="margin-top:10px">Paste any Vaultly gift code. The value lands in your wallet instantly and can be spent on any brand in the marketplace.</p>' +
+      '<div style="margin-bottom:26px">' +
+        '<span class="eyebrow">Redeem</span>' +
+        '<h1 style="margin-top:16px">Present a code<br>for credit.</h1>' +
+        '<p class="lede">Any Vaultly code, in any denomination. The value is booked to your ledger immediately and can be drawn against any brand in the marketplace.</p>' +
       '</div>' +
       '<div class="card card-pad">' +
-        '<div class="field"><label for="redeemInput">Gift code</label>' +
+        '<div class="field"><label for="redeemInput">Instrument number</label>' +
           '<input id="redeemInput" class="code-input" placeholder="VLT-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" maxlength="19">' +
         '</div>' +
-        '<button class="btn btn-primary btn-block btn-lg" style="margin-top:14px" data-act="do-redeem">Redeem to wallet</button>' +
-        '<p class="tiny muted center" style="margin-top:10px">Codes are single use. Dashes are optional.</p>' +
+        '<button class="btn btn-primary btn-block btn-lg" style="margin-top:16px" data-act="do-redeem">Book to ledger</button>' +
+        '<p class="tiny muted center" style="margin-top:12px">Single use. Dashes optional.</p>' +
       '</div>' +
       '<div class="steps" style="margin-top:26px">' +
-        step(1, 'Paste your code', 'From an email, receipt or the back of a physical card.') +
-        step(2, 'Balance is credited', 'Every brand converts into one Vaultly balance.') +
-        step(3, 'Spend it anywhere', 'Buy a card from any other brand, or request a payout.') +
+        step('01', 'Present the code', 'From an email, a receipt, or the back of a physical card.') +
+        step('02', 'Credit is booked', 'Every brand resolves into one ledger balance.') +
+        step('03', 'Draw against it', 'Take a card on any other brand, or file for payout.') +
       '</div>' +
     '</section>';
   }
@@ -414,43 +432,46 @@
     var added = state.txns.reduce(function (a, t) { return a + (t.amount > 0 ? t.amount : 0); }, 0);
 
     return '<section class="section">' +
-      '<div class="wallet-hero">' +
-        '<div class="spread" style="align-items:flex-start">' +
-          '<div><div class="wallet-label">Available balance</div>' +
-            '<div class="wallet-amount">' + money(state.balance) + '</div>' +
-            '<div class="small" style="opacity:.85;margin-top:6px">' + esc(state.user.email) + ' · member since ' +
+      '<div class="statement">' +
+        '<div class="statement-head">' +
+          '<div>' +
+            '<div class="caps">Available balance</div>' +
+            '<div class="statement-amount">' + money(state.balance) + '</div>' +
+            '<div class="statement-meta">' + esc(state.user.email) + ' · opened ' +
               new Date(state.user.since).toLocaleDateString() + '</div>' +
+            '<div class="wallet-actions">' +
+              '<a class="btn btn-white" href="#/redeem" data-link>Add funds</a>' +
+              '<a class="btn" href="#/shop" data-link>Draw a card</a>' +
+              '<a class="btn" href="#/payout" data-link>Payout</a>' +
+            '</div>' +
           '</div>' +
-          '<span class="pill" style="background:rgba(255,255,255,.18);color:#fff">' + ICON.lock + ' Unverified</span>' +
+          '<span class="pill pill-stamp">' + ICON.lock + ' Unverified</span>' +
         '</div>' +
-        '<div class="wallet-actions">' +
-          '<a class="btn btn-white" href="#/redeem" data-link>' + ICON.plus + ' Add funds</a>' +
-          '<a class="btn" href="#/shop" data-link>' + ICON.gift + ' Buy a card</a>' +
-          '<a class="btn" href="#/payout" data-link>' + ICON.arrowUp + ' Payout</a>' +
+        '<div class="statement-body">' +
+          '<div class="stat-grid">' +
+            '<div class="stat"><div class="k">Credited</div><div class="v">' + money(added) + '</div></div>' +
+            '<div class="stat"><div class="k">Drawn</div><div class="v">' + money(spent) + '</div></div>' +
+            '<div class="stat"><div class="k">Instruments</div><div class="v">' + state.owned.length + '</div></div>' +
+            '<div class="stat"><div class="k">Payout</div><div class="v" style="color:var(--stamp)">Held</div></div>' +
+          '</div>' +
         '</div>' +
       '</div>' +
 
-      '<div class="stat-grid" style="margin-top:18px">' +
-        '<div class="stat"><div class="k">Added</div><div class="v">' + money(added) + '</div></div>' +
-        '<div class="stat"><div class="k">Spent</div><div class="v">' + money(spent) + '</div></div>' +
-        '<div class="stat"><div class="k">Cards owned</div><div class="v">' + state.owned.length + '</div></div>' +
-        '<div class="stat"><div class="k">Payout status</div><div class="v" style="font-size:15px;color:var(--warn)">Locked</div></div>' +
-      '</div>' +
-
-      '<div class="cols-2" style="margin-top:18px">' +
-        '<div class="card card-pad">' +
-          '<div class="spread" style="margin-bottom:6px"><h3>My gift cards</h3>' +
-            '<span class="small muted">' + state.owned.length + ' total</span></div>' +
+      '<div class="cols-2" style="margin-top:22px">' +
+        '<div>' +
+          '<div class="section-head"><div><h2>Instruments held</h2></div>' +
+            '<span class="caps">' + state.owned.length + ' on file</span></div>' +
           (state.owned.length
-            ? '<div class="owned" style="margin-top:14px">' + state.owned.map(ownedCard).join('') + '</div>'
-            : '<div class="empty" style="margin-top:12px">No cards yet.<br><a class="btn btn-primary btn-sm" style="margin-top:12px" href="#/shop" data-link>Browse the marketplace</a></div>') +
+            ? '<div class="owned">' + state.owned.map(ownedCard).join('') + '</div>'
+            : '<div class="empty">No instruments drawn yet.<br>' +
+              '<a class="btn btn-ghost btn-sm" style="margin-top:14px" href="#/shop" data-link>Open the marketplace</a></div>') +
         '</div>' +
 
-        '<div class="card card-pad">' +
-          '<h3 style="margin-bottom:4px">Activity</h3>' +
+        '<div>' +
+          '<div class="section-head"><div><h2>Journal</h2></div></div>' +
           (state.txns.length
-            ? '<div class="list" style="margin-top:8px">' + state.txns.slice(0, 12).map(txRow).join('') + '</div>'
-            : '<p class="small muted" style="margin-top:10px">Nothing here yet.</p>') +
+            ? '<div class="list">' + state.txns.slice(0, 12).map(txRow).join('') + '</div>'
+            : '<p class="small muted">No entries yet.</p>') +
         '</div>' +
       '</div>' +
     '</section>';
@@ -458,21 +479,20 @@
 
   function ownedCard(c) {
     var b = brand(c.brandId);
-    return '<div class="owned-card">' + cardFace(b, c.amount) +
+    return '<div class="owned-card">' + cardFace(b, c.amount, 'gc-sm') +
       '<div class="code-row"><span class="mono">' + esc(c.code) + '</span>' +
       '<button class="icon-btn" style="width:28px;height:28px" data-act="copy" data-text="' + esc(c.code) + '" title="Copy code">' + ICON.copy + '</button></div>' +
-      '<div class="tiny muted">Purchased ' + timeAgo(c.ts) + '</div></div>';
+      '<div class="tiny muted">Drawn ' + timeAgo(c.ts) + '</div></div>';
   }
 
   function txRow(t) {
-    var cls = t.amount > 0 ? 'in' : 'out';
-    var icon = t.dir === 'hold' ? ICON.lock : t.amount > 0 ? ICON.arrowDn : ICON.arrowUp;
-    if (t.dir === 'hold') cls = 'hold';
-    return '<div class="list-item"><div class="li-icon ' + cls + '">' + icon + '</div>' +
+    var mark = t.dir === 'hold' ? '\u25CB' : t.amount > 0 ? '+' : '\u2212';
+    var cls = t.dir === 'hold' ? 'hold' : t.amount > 0 ? 'in' : 'out';
+    return '<div class="list-item"><div class="li-mark ' + cls + '">' + mark + '</div>' +
       '<div class="li-body"><div class="li-title">' + esc(t.title) + '</div>' +
       '<div class="li-sub">' + esc(t.sub) + ' · ' + timeAgo(t.ts) + '</div></div>' +
       '<div class="li-amt' + (t.amount > 0 ? ' pos' : '') + '">' +
-      (t.amount ? (t.amount > 0 ? '+' : '−') + money(Math.abs(t.amount)) : '—') + '</div></div>';
+      (t.amount ? (t.amount > 0 ? '+' : '\u2212') + money(Math.abs(t.amount)) : '\u2014') + '</div></div>';
   }
 
   /* -------------------------------------------------------------- payout */
@@ -483,17 +503,22 @@
     var pending = state.payouts.length;
 
     return '<section class="section">' +
-      '<div class="section-head"><div><span class="eyebrow">' + ICON.arrowUp + ' Payout</span>' +
-        '<h1 style="margin-top:12px">Cash out your balance</h1>' +
-        '<p style="margin-top:8px;max-width:62ch">Move your Vaultly balance to a bank account, PayPal, a crypto wallet or a debit card. Payouts are released once support has verified your account.</p></div></div>' +
+      '<div class="section-head"><div><span class="eyebrow">Payout</span>' +
+        '<h1 style="margin-top:16px">Draw the balance out</h1>' +
+        '<p>Settle your ledger balance to a bank account, PayPal, a crypto wallet or a debit card. Funds are released once the support desk has verified the account.</p></div></div>' +
 
-      '<div class="notice" style="margin-bottom:18px">' + ICON.lock +
-        '<div><div class="notice-title">Verification required before payout</div>' +
-        '<div class="notice-body">Your account is not verified yet, so withdrawals are on hold. <strong>You need to be verified by our support team to pay out.</strong> Start a verification request below and support will review your account.</div></div></div>' +
+      '<div class="notice notice-stamp stamped" style="margin-bottom:22px">' + ICON.lock +
+        '<div style="max-width:60ch"><div class="notice-title">Payout held pending verification</div>' +
+        '<div class="notice-body">This account has not been verified, so no balance can leave it. ' +
+        '<strong>You need to be verified by our support team to pay out.</strong> ' +
+        'File a request below and the support desk will review the account.</div></div>' +
+        '<div class="stamp"><div class="stamp-line1">Not verified</div>' +
+        '<div class="stamp-line2">Payout withheld</div></div>' +
+      '</div>' +
 
       '<div class="cols-2">' +
         '<div class="card card-pad">' +
-          '<h3 style="margin-bottom:12px">Withdraw</h3>' +
+          '<h3 style="margin-bottom:14px">Settlement instruction</h3>' +
           '<div class="field" style="margin-bottom:14px"><label>Payout method</label>' +
             '<div class="method-grid">' + METHODS.map(function (x) {
               return '<button class="method' + (x.id === payoutMethod ? ' sel' : '') + '" data-act="method" data-id="' + x.id + '">' +
@@ -504,25 +529,25 @@
             '<input id="poDest" class="input" placeholder="' + esc(m.ph) + '" autocomplete="off"></div>' +
           '<div class="field" style="margin-bottom:6px"><label for="poAmt">Amount (max ' + money(state.balance) + ')</label>' +
             '<input id="poAmt" class="input" type="number" min="10" step="1" placeholder="0.00" value="' + (state.balance ? Math.floor(state.balance) : '') + '"></div>' +
-          '<p class="tiny muted">Minimum payout ' + money(10) + '. Processing time depends on the method.</p>' +
-          '<button class="btn btn-primary btn-block btn-lg" style="margin-top:14px" data-act="do-payout">' + ICON.lock + ' Request payout</button>' +
+          '<p class="tiny muted">Minimum settlement ' + money(10) + '. Clearing time depends on the method.</p>' +
+          '<button class="btn btn-primary btn-block btn-lg" style="margin-top:16px" data-act="do-payout">' + ICON.lock + ' File payout request</button>' +
           (pending ? '<div class="notice notice-accent" style="margin-top:14px">' + ICON.info +
-            '<div><div class="notice-title">' + pending + ' request' + (pending > 1 ? 's' : '') + ' waiting for verification</div>' +
+            '<div><div class="notice-title">' + pending + ' request' + (pending > 1 ? 's' : '') + ' held for verification</div>' +
             '<div class="notice-body">Latest: ' + money(state.payouts[0].amount) + ' via ' + esc(state.payouts[0].method) +
             ' · ticket <span class="mono">' + esc(state.payouts[0].ticket) + '</span></div></div></div>' : '') +
         '</div>' +
 
         '<div class="card card-pad">' +
-          '<h3 style="margin-bottom:14px">Verification status</h3>' +
+          '<h3 style="margin-bottom:16px">Verification file</h3>' +
           '<div class="tracker">' +
-            tstep('done', ICON.check, 'Account created', new Date(state.user.since).toLocaleDateString()) +
+            tstep('done', ICON.check, 'Account opened', new Date(state.user.since).toLocaleDateString()) +
             tstep('done', ICON.check, 'Email on file', esc(state.user.email)) +
-            tstep('now', '!', 'Identity verification', 'Pending — support has to verify you') +
-            tstep('', '3', 'Payouts unlocked', 'Available after verification') +
+            tstep('now', '!', 'Identity check', 'Open — the support desk has to verify you') +
+            tstep('', '4', 'Payout released', 'Follows verification') +
           '</div>' +
           '<div class="divider"></div>' +
-          '<p class="small muted">Verification is handled by a human reviewer. In this prototype no documents are uploaded and no request leaves your browser.</p>' +
-          '<button class="btn btn-ghost btn-block" style="margin-top:12px" data-act="support">' + ICON.chat + ' Contact support</button>' +
+          '<p class="small muted">A person reviews every file. In this prototype nothing is uploaded and no request leaves your browser.</p>' +
+          '<button class="btn btn-ghost btn-block" style="margin-top:14px" data-act="support">' + ICON.chat + ' Contact the desk</button>' +
         '</div>' +
       '</div>' +
     '</section>';
@@ -537,34 +562,34 @@
   function viewAbout() {
     return '<section class="section">' +
       '<div style="max-width:70ch">' +
-        '<span class="eyebrow">' + ICON.globe + ' The concept</span>' +
-        '<h1 style="margin-top:14px">Gift cards are broken. Vaultly is the fix.</h1>' +
-        '<p class="lede">A gift card is money that only works in one place. Get one for a shop you never use and it sits in a drawer until it expires. Vaultly is a single exchange where every card, voucher and prepaid balance becomes one number you actually control.</p>' +
+        '<span class="eyebrow">The concept</span>' +
+        '<h1 style="margin-top:18px">A gift card is money<br>with someone else\u2019s name on it.</h1>' +
+        '<p class="lede">Get one for a shop you never use and it sits in a drawer until it expires. Vaultly is a clearing house: every card, voucher and prepaid balance is accepted, booked into one ledger, and reissued as whatever you actually want.</p>' +
       '</div>' +
 
       '<div class="flow" style="margin-top:30px">' +
-        '<div class="flow-item"><h3>Redeem anything</h3><p>Shopping cards, gaming credit, streaming vouchers, prepaid Visa, crypto vouchers — one input field takes them all.</p></div>' +
-        '<div class="flow-item"><h3>One balance</h3><p>Everything converts into a single Vaultly balance. No more juggling twelve codes across twelve inboxes.</p></div>' +
-        '<div class="flow-item"><h3>Spend or swap</h3><p>Buy a card from any other brand in the marketplace and get the code instantly in your wallet.</p></div>' +
-        '<div class="flow-item"><h3>Or cash out</h3><p>Send the balance to your bank, PayPal, card or crypto wallet once support has verified your account.</p></div>' +
+        '<div class="flow-item"><h3>Present anything</h3><p>Shopping cards, gaming credit, streaming vouchers, prepaid Visa, crypto vouchers. One field accepts them all.</p></div>' +
+        '<div class="flow-item"><h3>Book to one ledger</h3><p>Every brand resolves into a single figure. No more twelve codes across twelve inboxes.</p></div>' +
+        '<div class="flow-item"><h3>Draw a new card</h3><p>Take an instrument on any other brand in the marketplace; the code is issued to you on the spot.</p></div>' +
+        '<div class="flow-item"><h3>Or settle out</h3><p>Send the balance to a bank, PayPal, card or crypto wallet once the support desk has verified the account.</p></div>' +
       '</div>' +
 
       '<div class="section">' +
-        '<div class="section-head"><div><h2>Why people trust Vaultly</h2>' +
-        '<p>Built around the two things that matter with stored value: the money is where you left it, and a human is reachable.</p></div></div>' +
+        '<div class="section-head"><div><h2>Why the house is trusted</h2>' +
+        '<p>Stored value comes down to two promises: the money is where you left it, and a person is reachable when it is not.</p></div></div>' +
         '<div class="feature-grid">' +
-          feature(ICON.shield, 'Value stays in your wallet', 'Balance is only debited at the moment a code is issued and shown to you. Nothing is charged up front.') +
-          feature(ICON.lock, 'Verified payouts only', 'Withdrawals are reviewed by support before release. It is slower on purpose — it is what stops an account takeover draining a balance.') +
-          feature(ICON.bolt, 'Instant delivery', 'Codes are generated and delivered the second a purchase confirms. No waiting rooms, no shipping.') +
-          feature(ICON.swap, 'Brand agnostic', 'Twenty-plus brands across shopping, gaming, streaming, prepaid cards and crypto — all priced in one currency.') +
-          feature(ICON.chat, 'Real support', 'Verification, disputes and payouts are handled by people, not an automated queue.') +
-          feature(ICON.globe, 'Works everywhere', 'A browser is the only requirement. Nothing to install, nothing to sync.') +
+          feature(ICON.shield, 'Debited on issue', 'The ledger only moves when an instrument exists and is on screen. Nothing is taken up front.') +
+          feature(ICON.lock, 'Verified settlement', 'Payouts are reviewed before release. Deliberately slower \u2014 it is what stops a stolen account draining a balance.') +
+          feature(ICON.bolt, 'Issued on confirmation', 'Codes are drawn the second an order clears. No queue, no shipping, no waiting room.') +
+          feature(ICON.swap, 'Brand agnostic', 'Twenty-plus brands across shopping, gaming, streaming, prepaid cards and crypto, all in one currency.') +
+          feature(ICON.chat, 'Staffed desk', 'Verification, disputes and payouts are handled by people rather than an automated rule.') +
+          feature(ICON.globe, 'Nothing to install', 'A browser is the whole requirement. Nothing to sync, nothing to keep updated.') +
         '</div>' +
       '</div>' +
 
-      '<div class="card card-pad" style="text-align:center">' +
-        '<p class="small muted" style="margin-bottom:14px">Brands available in the marketplace</p>' +
-        '<div class="logo-strip">' + CATALOG.slice(0, 12).map(function (b) {
+      '<div>' +
+        '<p class="caps" style="margin-bottom:14px">Accepted brands</p>' +
+        '<div class="logo-strip">' + CATALOG.map(function (b) {
           return '<span>' + esc(b.name) + '</span>';
         }).join('') + '</div>' +
       '</div>' +
@@ -572,10 +597,10 @@
       '<div class="section">' +
         '<div class="section-head"><div><h2>Questions</h2></div></div>' +
         '<div class="faq">' +
-          faq('Is this a real shop?', 'No. Vaultly is a front-end prototype: a design and interaction demo. There is no backend, no payment processing and no real gift card is ever issued. Every balance, code and transaction you see is generated in your own browser and stored in localStorage. Clearing your browser data resets it.') +
-          faq('How does the wallet work?', 'Redeeming a Vaultly gift code credits your balance. Buying a card in the marketplace debits it and drops a generated code into “My gift cards”. All of it is simulated locally — refresh the page and your balance is still there, because it is saved on this device only.') +
+          faq('Is this a real house?', 'No. Vaultly is a front-end prototype: a design and interaction demo. There is no backend, no payment processing, and no real gift card is ever issued. Every balance, code and entry you see is generated in your own browser and stored in localStorage. Clearing your browser data resets it.') +
+          faq('How does the ledger work?', 'Presenting a Vaultly code credits your balance. Drawing a card in the marketplace debits it and files a generated code under instruments held. All of it is simulated locally — refresh and the balance is still there, because it is saved on this device only.') +
           faq('Why can’t I pay out?', 'Payouts are gated behind account verification. In the prototype every account starts unverified, so a payout request creates a support ticket and tells you that support has to verify you before money can leave the wallet.') +
-          faq('Where do gift codes come from?', 'From the private issuing console. Whoever runs the demo has a secret link that generates single-use codes with any value, which can then be redeemed in the Redeem tab.') +
+          faq('Where do the codes come from?', 'From the private issuing console. Whoever runs the demo holds a secret link that draws single-use instruments of any denomination, which are then presented in the Redeem tab.') +
           faq('Is my data sent anywhere?', 'No. There are no network requests beyond loading the page itself and its web font. Nothing you type is transmitted, logged or shared.') +
         '</div>' +
       '</div>' +
@@ -592,9 +617,10 @@
   function viewLogin() {
     return '<section class="auth-wrap">' +
       '<div class="card card-pad">' +
-        '<div class="center" style="margin-bottom:18px">' +
-          '<h2>Sign in to Vaultly</h2>' +
-          '<p class="small muted" style="margin-top:8px">Demo login — any email and password works, and the account is created on the spot.</p>' +
+        '<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--rule)">' +
+          '<span class="eyebrow">Account</span>' +
+          '<h2 style="margin-top:12px">Sign in</h2>' +
+          '<p class="small muted" style="margin-top:8px">Demo access — any email and password work, and the account is opened on the spot.</p>' +
         '</div>' +
         '<div class="field" style="margin-bottom:12px"><label for="liEmail">Email</label>' +
           '<input id="liEmail" class="input" type="email" placeholder="you@example.com" autocomplete="email"></div>' +
@@ -603,7 +629,7 @@
         '<button class="btn btn-primary btn-block btn-lg" data-act="do-login">Continue</button>' +
         '<div class="divider"></div>' +
         '<button class="btn btn-ghost btn-block" data-act="demo-login">Use the demo account</button>' +
-        '<p class="tiny muted center" style="margin-top:14px">No password is stored or checked. The session lives in this browser only.</p>' +
+        '<p class="tiny muted center" style="margin-top:16px">No password is stored or checked. The session lives in this browser only.</p>' +
       '</div>' +
     '</section>';
   }
@@ -612,17 +638,17 @@
   function viewConsole(key) {
     if (key !== CONSOLE_KEY) {
       return '<section class="section"><div class="empty">' +
-        '<h2 style="margin-bottom:8px">Console not found</h2>' +
-        '<p class="muted">This issuing link is invalid.</p></div></section>';
+        '<h2 style="margin-bottom:10px">No such console</h2>' +
+        '<p class="muted">This issuing link is not valid.</p></div></section>';
     }
     var issued = state.codes.length;
     var used = state.codes.filter(function (c) { return c.redeemed; }).length;
     var outstanding = state.codes.reduce(function (a, c) { return a + (c.redeemed ? 0 : c.amount); }, 0);
 
     return '<section class="section">' +
-      '<div class="console-bar" style="margin-bottom:20px">' +
-        ICON.key + '<div><strong>Issuing console</strong>' +
-        '<div class="small" style="opacity:.72">Private link · generate gift codes for this Vaultly demo</div></div>' +
+      '<div class="console-bar" style="margin-bottom:24px">' +
+        ICON.key + '<div><div class="wordmark">Issuing console</div>' +
+        '<div class="tiny" style="opacity:.62;font-family:var(--mono);letter-spacing:.08em">PRIVATE LINK · DRAWS INSTRUMENTS FOR THIS DEMO</div></div>' +
         '<span class="pill" style="margin-left:auto">' + issued + ' issued</span>' +
         '<span class="pill">' + used + ' redeemed</span>' +
         '<span class="pill">' + money(outstanding) + ' outstanding</span>' +
@@ -630,36 +656,36 @@
 
       '<div class="cols-2">' +
         '<div class="card card-pad">' +
-          '<h3 style="margin-bottom:14px">Generate gift codes</h3>' +
+          '<h3 style="margin-bottom:16px">Draw new instruments</h3>' +
           '<div class="row wrap" style="gap:12px;align-items:flex-end">' +
-            '<div class="field grow" style="min-width:120px"><label for="genAmt">Value each (USD)</label>' +
+            '<div class="field grow" style="min-width:120px"><label for="genAmt">Denomination (USD)</label>' +
               '<input id="genAmt" class="input" type="number" min="1" step="1" value="50"></div>' +
             '<div class="field" style="width:110px"><label for="genQty">Quantity</label>' +
               '<input id="genQty" class="input" type="number" min="1" max="50" step="1" value="1"></div>' +
             '<div class="field grow" style="min-width:150px"><label for="genLabel">Batch label</label>' +
               '<input id="genLabel" class="input" placeholder="e.g. Launch giveaway"></div>' +
           '</div>' +
-          '<button class="btn btn-primary btn-block btn-lg" style="margin-top:14px" data-act="generate">' + ICON.plus + ' Generate codes</button>' +
+          '<button class="btn btn-primary btn-block btn-lg" style="margin-top:16px" data-act="generate">' + ICON.plus + ' Draw codes</button>' +
           '<div id="genOut"></div>' +
         '</div>' +
 
         '<div class="card card-pad">' +
-          '<h3 style="margin-bottom:6px">Demo controls</h3>' +
-          '<p class="small muted">Reset wipes the wallet, purchased cards, activity and every issued code on this device.</p>' +
+          '<h3 style="margin-bottom:8px">Demo controls</h3>' +
+          '<p class="small muted">Reset clears the ledger, held instruments, journal and every issued code on this device.</p>' +
           '<button class="btn btn-ghost btn-block" style="margin-top:12px" data-act="copy" data-text="' + esc(location.origin + location.pathname + '#/console/' + CONSOLE_KEY) + '">' + ICON.copy + ' Copy console link</button>' +
-          '<button class="btn btn-ghost btn-block" style="margin-top:8px;color:var(--danger)" data-act="reset">' + ICON.trash + ' Reset demo data</button>' +
+          '<button class="btn btn-ghost btn-block" style="margin-top:8px;color:var(--stamp)" data-act="reset">' + ICON.trash + ' Reset demo data</button>' +
         '</div>' +
       '</div>' +
 
       '<div class="card card-pad" style="margin-top:18px">' +
-        '<div class="spread" style="margin-bottom:10px"><h3>Issued codes</h3>' +
+        '<div class="spread" style="margin-bottom:12px"><h3>Issue register</h3>' +
           (issued ? '<button class="btn btn-ghost btn-sm" data-act="copy-all">' + ICON.copy + ' Copy unused</button>' : '') +
         '</div>' +
         (issued ? '<div class="table-wrap"><table class="table"><thead><tr>' +
-            '<th>Code</th><th>Value</th><th>Batch</th><th>Status</th><th></th></tr></thead><tbody>' +
+            '<th>Instrument</th><th>Value</th><th>Batch</th><th>Status</th><th></th></tr></thead><tbody>' +
             state.codes.slice().reverse().map(codeRow).join('') +
           '</tbody></table></div>'
-          : '<div class="empty">No codes issued yet.</div>') +
+          : '<div class="empty">Nothing issued yet.</div>') +
       '</div>' +
     '</section>';
   }
@@ -670,7 +696,7 @@
       '<td class="muted">' + (esc(c.label) || '—') + '</td>' +
       '<td>' + (c.redeemed
         ? '<span class="pill pill-success">' + ICON.check + ' Redeemed ' + timeAgo(c.redeemed) + '</span>'
-        : '<span class="pill pill-accent">Active</span>') + '</td>' +
+        : '<span class="pill">Outstanding</span>') + '</td>' +
       '<td style="text-align:right;white-space:nowrap">' +
         '<button class="icon-btn" style="width:28px;height:28px;display:inline-grid" data-act="copy" data-text="' + esc(c.code) + '" title="Copy">' + ICON.copy + '</button> ' +
         (c.redeemed ? '' : '<button class="icon-btn" style="width:28px;height:28px;display:inline-grid" data-act="revoke" data-code="' + esc(c.code) + '" title="Revoke">' + ICON.trash + '</button>') +
@@ -773,18 +799,18 @@
         var res = buy(el.dataset.id, amt);
         if (!res.ok) { toast('Not enough balance', 'Redeem a code to top up', 'err'); break; }
         var b = brand(el.dataset.id);
-        openModal('Order complete', '' +
-          '<div style="max-width:250px;margin:0 auto 16px">' + cardFace(b, amt) + '</div>' +
-          '<div class="notice notice-success" style="margin-bottom:14px">' + ICON.check +
-            '<div><div class="notice-title">' + esc(b.name) + ' card delivered</div>' +
-            '<div class="notice-body">Saved to your wallet. New balance ' + money(state.balance) + '.</div></div></div>' +
-          '<div class="field"><label>Your code</label><div class="code-row">' +
+        openModal('Instrument issued', '' +
+          '<div style="margin-bottom:16px">' + cardFace(b, amt) + '</div>' +
+          '<div class="notice notice-success" style="margin-bottom:16px">' + ICON.check +
+            '<div><div class="notice-title">' + esc(b.name) + ' instrument issued</div>' +
+            '<div class="notice-body">Filed under instruments held. Balance now ' + money(state.balance) + '.</div></div></div>' +
+          '<div class="field"><label>Instrument number</label><div class="code-row">' +
             '<span class="mono" style="font-size:14px">' + esc(res.card.code) + '</span>' +
             '<button class="icon-btn" style="width:28px;height:28px" data-act="copy" data-text="' + esc(res.card.code) + '">' + ICON.copy + '</button>' +
           '</div></div>' +
-          '<a class="btn btn-primary btn-block btn-lg" style="margin-top:14px" href="#/wallet" data-link data-act="close-modal">Open wallet</a>');
+          '<a class="btn btn-primary btn-block btn-lg" style="margin-top:16px" href="#/wallet" data-link data-act="close-modal">Open the ledger</a>');
         renderChrome();
-        toast('Purchase complete', b.name + ' · ' + money(amt));
+        toast('Instrument issued', b.name + ' · ' + money(amt));
         break;
       }
 
@@ -796,14 +822,14 @@
         if (!out.ok) { toast(out.msg, out.sub, 'err'); break; }
         input.value = '';
         renderChrome();
-        toast('Redeemed ' + money(out.amount), 'New balance ' + money(state.balance));
-        openModal('Code redeemed', '' +
+        toast('Booked ' + money(out.amount), 'Balance ' + money(state.balance));
+        openModal('Credit booked', '' +
           '<div class="notice notice-success">' + ICON.check +
-          '<div><div class="notice-title">' + money(out.amount) + ' added to your wallet</div>' +
-          '<div class="notice-body">Your balance is now ' + money(state.balance) + '.</div></div></div>' +
-          '<div class="row" style="margin-top:14px;gap:8px">' +
-            '<a class="btn btn-primary grow" href="#/shop" data-link data-act="close-modal">Spend it</a>' +
-            '<a class="btn btn-ghost grow" href="#/wallet" data-link data-act="close-modal">Open wallet</a>' +
+          '<div><div class="notice-title">' + money(out.amount) + ' booked to your ledger</div>' +
+          '<div class="notice-body">Balance now ' + money(state.balance) + '.</div></div></div>' +
+          '<div class="row" style="margin-top:16px;gap:8px">' +
+            '<a class="btn btn-primary grow" href="#/shop" data-link data-act="close-modal">Draw a card</a>' +
+            '<a class="btn btn-ghost grow" href="#/wallet" data-link data-act="close-modal">Open the ledger</a>' +
           '</div>');
         break;
       }
@@ -812,7 +838,7 @@
         var email = $('#liEmail').value.trim();
         if (!/^\S+@\S+\.\S+$/.test(email)) { $('#liEmail').focus(); toast('Enter a valid email', null, 'err'); break; }
         signIn(email);
-        toast('Welcome to Vaultly', state.seeded ? 'Demo credit added to your wallet' : null);
+        toast('Account opened', state.seeded ? 'Opening credit booked to your ledger' : null);
         var next = sessionStorage.getItem('vaultly.next') || '#/wallet';
         sessionStorage.removeItem('vaultly.next');
         go(next);
@@ -833,10 +859,10 @@
             '<div class="small muted">' + esc(state.user.email) + '</div></div></div>' +
           '<div class="stat-grid" style="margin-bottom:14px">' +
             '<div class="stat"><div class="k">Balance</div><div class="v">' + money(state.balance) + '</div></div>' +
-            '<div class="stat"><div class="k">Status</div><div class="v" style="font-size:15px;color:var(--warn)">Unverified</div></div>' +
+            '<div class="stat"><div class="k">Status</div><div class="v" style="font-size:14px;color:var(--stamp)">Unverified</div></div>' +
           '</div>' +
-          '<a class="btn btn-ghost btn-block" href="#/wallet" data-link data-act="close-modal">Open wallet</a>' +
-          '<button class="btn btn-ghost btn-block" style="margin-top:8px;color:var(--danger)" data-act="logout">Sign out</button>');
+          '<a class="btn btn-ghost btn-block" href="#/wallet" data-link data-act="close-modal">Open the ledger</a>' +
+          '<button class="btn btn-ghost btn-block" style="margin-top:8px;color:var(--stamp)" data-act="logout">Sign out</button>');
         break;
 
       case 'logout':
@@ -854,7 +880,7 @@
         var method = METHODS.filter(function (x) { return x.id === payoutMethod; })[0];
         var ticket = 'VF-' + block(6);
         state.payouts.unshift({ id: uid(), amount: pAmt, method: method.name, dest: dest, ticket: ticket, ts: Date.now() });
-        state.txns.unshift(tx('hold', 'Payout on hold', method.name + ' · awaiting verification', 0));
+        state.txns.unshift(tx('hold', 'Payout held', method.name + ' · awaiting verification', 0));
         save();
         render();
         openModal('Verification required', '' +
@@ -874,10 +900,10 @@
       case 'support':
         openModal('Support', '' +
           '<div class="notice notice-accent">' + ICON.chat +
-            '<div><div class="notice-title">Verification is handled by a person</div>' +
+            '<div><div class="notice-title">A person reviews every file</div>' +
             '<div class="notice-body">Reach the team at <strong>support@vaultly.app</strong> and quote your ticket. ' +
             'Typical response time is under 24 hours.</div></div></div>' +
-          '<p class="small muted" style="margin-top:12px">This is a prototype: the address is fictional and no message is delivered.</p>' +
+          '<p class="small muted" style="margin-top:14px">Prototype: the address is fictional and no message is delivered.</p>' +
           '<button class="btn btn-ghost btn-block" style="margin-top:12px" data-act="close-modal">Close</button>');
         break;
 
@@ -889,7 +915,7 @@
         var made = [];
         for (var i = 0; i < gQty; i++) { var c = newCode(gAmt, gLabel); state.codes.push(c); made.push(c.code); }
         save();
-        toast(gQty + ' code' + (gQty > 1 ? 's' : '') + ' generated', money(gAmt * gQty) + ' total value');
+        toast(gQty + ' instrument' + (gQty > 1 ? 's' : '') + ' drawn', money(gAmt * gQty) + ' face value');
         render();
         var out = $('#genOut');
         if (out) {

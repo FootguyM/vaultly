@@ -2,9 +2,10 @@
 """Inline index.html + styles.css + app.js into one self-contained page.
 
 Used for the hosted Artifact build, which must be a single file with no
-<html>/<head>/<body> wrapper (the host supplies those).
+<html>/<head>/<body> wrapper (the host supplies those). The Google Fonts
+stylesheet is carried over as an @import, which the artifact CSP allows.
 """
-import re, pathlib, sys
+import re, pathlib
 
 root = pathlib.Path(__file__).parent
 html = (root / 'index.html').read_text()
@@ -14,11 +15,17 @@ js   = (root / 'app.js').read_text()
 body = re.search(r'<body>(.*)</body>', html, re.S).group(1)
 body = body.replace('<script src="app.js"></script>', '')
 
-# Google Fonts stylesheet is allowed by the artifact CSP; @import keeps it in <style>.
-font = '@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");\n'
+# Carry the font request over from <head>, whatever families it names.
+font = ''
+m = re.search(r'<link rel="stylesheet" href="(https://fonts\.googleapis\.com/[^"]+)"', html)
+if m:
+    font = '@import url("%s");\n' % m.group(1).replace('&amp;', '&')
+
+title = re.search(r'<title>(.*?)</title>', html, re.S)
+title = title.group(1).split('—')[0].strip() if title else 'Vaultly'
 
 out = (
-    '<title>Vaultly</title>\n'
+    '<title>' + title + '</title>\n'
     '<style>\n' + font + css + '\n</style>\n'
     + body.strip() + '\n'
     '<script>\n' + js + '\n</script>\n'
