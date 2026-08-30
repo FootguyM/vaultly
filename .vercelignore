@@ -1,0 +1,4 @@
+# Nur die statische Seite wird zu Vercel hochgeladen.
+build-artifact.py
+README.md
+dist/
