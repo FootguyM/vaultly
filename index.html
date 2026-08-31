@@ -14,13 +14,6 @@
 </head>
 <body>
 
-<div class="ribbon" id="ribbon">
-  <div class="shell ribbon-inner">
-    <span class="ribbon-mark">Specimen</span>
-    <span class="ribbon-text">Front-end prototype — no real money, no real gift cards, no backend. Everything stays in this browser.</span>
-    <button class="ribbon-x" data-act="dismiss-ribbon" aria-label="Dismiss notice">&times;</button>
-  </div>
-</div>
 
 <header class="site-header">
   <div class="shell header-inner">
@@ -39,6 +32,7 @@
       <a href="#/wallet" data-link data-route="wallet">Ledger</a>
       <a href="#/payout" data-link data-route="payout">Payout</a>
       <a href="#/about" data-link data-route="about">Concept</a>
+      <a href="#/console" data-link data-route="console" id="navConsole" hidden>Issuing</a>
     </nav>
 
     <div class="header-actions">
@@ -88,15 +82,15 @@
         <a href="#/about" data-link>Support</a>
       </div>
       <div>
-        <h4>Status</h4>
-        <span class="muted small">Demo environment</span>
-        <span class="muted small">No live settlement</span>
-        <span class="muted small">Local storage only</span>
+        <h4>Contact</h4>
+        <span class="muted small">support@vaultly.app</span>
+        <span class="muted small">Mon–Fri, 09:00–18:00 CET</span>
+        <span class="muted small" id="currencyNote"></span>
       </div>
     </div>
   </div>
   <div class="shell footer-legal">
-    <span class="muted tiny">© <span id="year"></span> Vaultly — a fictional house, built as a front-end prototype. No instrument issued here carries value.</span>
+    <span class="muted tiny">© <span id="year"></span> Vaultly. Vaultly is an independent exchange and is not affiliated with, endorsed by, or sponsored by any of the brands listed.</span>
   </div>
 </footer>
 

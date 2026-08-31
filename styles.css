@@ -123,21 +123,6 @@ svg{fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stro
   letter-spacing:.16em; color:var(--ink-3);
 }
 
-/* ----------------------------------------------------- ribbon */
-.ribbon{background:var(--ink); color:var(--paper); border-bottom:1px solid var(--ink)}
-.ribbon-inner{display:flex; align-items:center; gap:14px; padding-block:7px; position:relative}
-.ribbon-mark{
-  font-family:var(--mono); font-size:10px; font-weight:600; text-transform:uppercase;
-  letter-spacing:.2em; border:1px solid currentColor; padding:2px 7px; flex:none;
-  color:var(--paper); opacity:.95;
-}
-.ribbon-text{font-size:12px; letter-spacing:.005em; opacity:.72}
-.ribbon-x{
-  margin-left:auto; background:none; border:0; color:inherit; cursor:pointer;
-  font-size:17px; line-height:1; padding:2px 4px; opacity:.55;
-}
-.ribbon-x:hover{opacity:1}
-
 /* ----------------------------------------------------- header */
 .site-header{
   position:sticky; top:0; z-index:40; background:var(--paper);
@@ -542,6 +527,25 @@ svg{fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stro
 .amt.sel{background:var(--green); color:#fbfbf9}
 :root[data-theme="dark"] .amt.sel{color:#0f120f}
 
+/* free-amount stepper: the field and its two increments read as one control */
+.stepper{display:flex; align-items:stretch; border:1px solid var(--rule-2); border-radius:var(--r-1)}
+.stepper:focus-within{border-color:var(--green)}
+.step-btn{
+  width:42px; flex:none; border:0; background:var(--surface-2); color:var(--ink-2);
+  cursor:pointer; font-family:var(--mono); font-size:15px; line-height:1;
+  transition:background .12s, color .12s;
+}
+.step-btn:hover{background:var(--green-wash); color:var(--green)}
+.step-btn:first-child{border-right:1px solid var(--rule-2)}
+.step-btn:last-child{border-left:1px solid var(--rule-2)}
+.stepper-input{
+  border:0; border-radius:0; text-align:center; font-family:var(--mono);
+  font-size:15px; background:var(--surface); -moz-appearance:textfield;
+}
+.stepper-input:focus{box-shadow:none; border:0}
+.stepper-input::-webkit-outer-spin-button,
+.stepper-input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+
 /* ------------------------------------------------- console */
 .console-bar{
   display:flex; align-items:center; gap:14px; padding:13px 16px; flex-wrap:wrap;
@@ -607,7 +611,6 @@ svg{fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stro
   .nav a.active{border-bottom-color:var(--rule); border-left-color:var(--green); padding-left:9px}
   .menu-btn{display:grid}
   .balance-pill .balance-label{display:none}
-  .ribbon-text{display:none}
   .hero-trust{display:grid; grid-template-columns:repeat(3,1fr); gap:0}
   .hero-trust div{padding-right:12px; margin-right:0}
   .hero-trust dt{font-size:15px}

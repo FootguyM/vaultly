@@ -4,9 +4,10 @@ Prototyp eines universellen Gift-Card-Marktplatzes: jede Geschenkkarte, jeder Vo
 jedes Prepaid-Guthaben wird zu **einem** Wallet-Betrag — und davon kauft man eine Karte
 irgendeiner anderen Marke.
 
-**Reines Frontend.** Kein Backend, keine Zahlungsabwicklung, keine echten Gutscheincodes.
-Konten, Guthaben, Codes und Transaktionen entstehen im Browser und liegen in
-`localStorage`. Browserdaten löschen setzt die Demo zurück.
+**Architektur:** statische Single-Page-App ohne Backend. Konten, Guthaben, Codes und
+Buchungen werden im Browser erzeugt und in `localStorage` gehalten — Browserdaten löschen
+setzt den Stand zurück. Es gibt keine Serverkomponente und keine Zahlungsabwicklung;
+wer echte Transaktionen braucht, muss eine anbinden.
 
 ## Deployment auf Vercel
 
@@ -39,12 +40,31 @@ python3 -m http.server 8080   # danach http://localhost:8080 öffnen
 | Ledger | `#/wallet` | Kontoauszug: Guthaben, Kennzahlen, gehaltene Instrumente mit kopierbaren Codes, Journal. Nur mit Login. |
 | Auszahlung | `#/payout` | Bank, PayPal, Krypto oder Debitkarte. Immer blockiert: **Support muss das Konto verifizieren, bevor ausgezahlt wird.** Erzeugt ein Ticket und zeigt den Verifizierungs-Status. |
 | Konzept | `#/about` | Die Idee dahinter, Vertrauensargumente und FAQ. |
-| Login | `#/login` | Demo-Login: jede E-Mail funktioniert, das Konto entsteht sofort. |
-| Ausgabe-Konsole | `#/console/vt-9f2k-console` | **Privater Link.** Erzeugt einzeln gültige Gift-Codes mit beliebigem Wert, listet alle ausgegebenen Codes mit Status und setzt die Demo zurück. |
+| Login | `#/login` | E-Mail plus beliebiges Passwort legt sofort ein Mitgliedskonto an. Der Benutzername `admin` verlangt das Admin-Passwort. |
+| Ausgabe-Konsole | `#/console` | Nur für Administratoren. Erzeugt einzeln gültige Gift-Codes mit beliebigem Wert, listet alle ausgegebenen Codes mit Status. Auch über den privaten Link `#/console/vt-9f2k-console` erreichbar. |
 
-Die Konsole ist eine Client-Route — bequem für die Demo, aber keine echte Zugriffskontrolle.
+## Administrator
+
+Benutzername `admin`, Passwort `Passwort` (in `app.js` als `ADMIN_USER` / `ADMIN_PASS`).
+Nach dem Login erscheint „Issuing" in der Navigation und die Konsole ist unter `#/console`
+offen.
+
+> **Wichtig:** Die Seite ist rein statisch, also stehen diese Zugangsdaten im ausgelieferten
+> Quelltext und sind für jeden lesbar. Sie schützen die Oberfläche vor zufälligen Besuchern,
+> nicht die Daten. Für echten Schutz braucht es eine serverseitige Prüfung.
+
 Wo sich der URL-Hash nicht setzen lässt (eingebettete Viewer, iframes), öffnet
-`Strg` + `Umschalt` + `G` dieselbe Konsole nach Eingabe des Schlüssels.
+`Strg` + `Umschalt` + `G` die Konsole nach Eingabe des Schlüssels.
+
+## Beträge und Währung
+
+Alle Gutscheine werden in 5er-Schritten verkauft, ab 5 aufwärts bis zur Obergrenze der
+jeweiligen Marke (`max` im Katalog in `app.js`). Mindestauszahlung ebenfalls 5.
+Die Konstanten dafür stehen zusammen oben in `app.js`: `STEP`, `MIN_AMOUNT`, `MIN_PAYOUT`.
+
+Die Währung richtet sich nach der Region, die der Browser meldet — Euro in der Eurozone,
+Pfund in Großbritannien, Dollar in den USA und so weiter (`REGION_CURRENCY` in `app.js`).
+Die Zahlen selbst werden nicht umgerechnet: 5 ist 5, in welcher Währung auch immer.
 
 ## Gestaltung
 

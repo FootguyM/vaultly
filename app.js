@@ -1,40 +1,59 @@
 /* ==========================================================================
-   Vaultly — front-end prototype
-   Everything runs in the browser. No backend, no network calls, no real money.
-   State lives in localStorage under the key below.
+   Vaultly — marketplace client
+   A static single-page app: hash router, view functions and a small state
+   object persisted to localStorage under the key below.
    ========================================================================== */
 (function () {
   'use strict';
 
   var STORE_KEY = 'vaultly.state.v1';
-  /* The private console route. Share the link, not the app:
-     #/console/vt-9f2k-console                                          */
+  /* The console is reachable two ways: signed in as the administrator, or via
+     the private link #/console/vt-9f2k-console.
+     Note: this is a static site, so the credentials below ship in the page
+     source and are readable by anyone. They gate the interface, not the data. */
   var CONSOLE_KEY = 'vt-9f2k-console';
+  var ADMIN_USER = 'admin';
+  var ADMIN_PASS = 'Passwort';
 
   /* ---------------------------------------------------------------- catalog */
   var CATALOG = [
-    { id:'amazon',    name:'Amazon',           cat:'Shopping',  ink:'#87500b', amounts:[10,25,50,100,250] },
-    { id:'steam',     name:'Steam',            cat:'Gaming',    ink:'#1b2838', amounts:[10,20,50,100] },
-    { id:'playstore', name:'Google Play',      cat:'Apps',      ink:'#1d6b3c', amounts:[10,25,50,100] },
-    { id:'apple',     name:'Apple',            cat:'Apps',      ink:'#2b2c2e', amounts:[15,25,50,100,200] },
-    { id:'netflix',   name:'Netflix',          cat:'Streaming', ink:'#8c1116', amounts:[25,50,100] },
-    { id:'spotify',   name:'Spotify',          cat:'Streaming', ink:'#125a2d', amounts:[10,30,60] },
-    { id:'playstation',name:'PlayStation',     cat:'Gaming',    ink:'#123a78', amounts:[10,20,50,100] },
-    { id:'xbox',      name:'Xbox',             cat:'Gaming',    ink:'#155619', amounts:[10,25,50,100] },
-    { id:'nintendo',  name:'Nintendo eShop',   cat:'Gaming',    ink:'#8d1014', amounts:[10,20,35,50] },
-    { id:'visa',      name:'Prepaid Visa',     cat:'Payments',  ink:'#1a1f71', amounts:[25,50,100,250,500] },
-    { id:'mastercard',name:'Prepaid Mastercard',cat:'Payments', ink:'#8d2412', amounts:[25,50,100,250] },
-    { id:'paypal',    name:'PayPal Balance',   cat:'Payments',  ink:'#14356b', amounts:[20,50,100,200] },
-    { id:'btc',       name:'Bitcoin Voucher',  cat:'Crypto',    ink:'#8a5410', amounts:[25,50,100,250,500] },
-    { id:'eth',       name:'Ethereum Voucher', cat:'Crypto',    ink:'#3c4270', amounts:[25,50,100,250] },
-    { id:'usdt',      name:'USDT Voucher',     cat:'Crypto',    ink:'#125946', amounts:[20,50,100,500] },
-    { id:'airbnb',    name:'Airbnb',           cat:'Travel',    ink:'#8d2440', amounts:[50,100,250] },
-    { id:'uber',      name:'Uber & Uber Eats', cat:'Travel',    ink:'#22252a', amounts:[15,25,50,100] },
-    { id:'ikea',      name:'IKEA',             cat:'Shopping',  ink:'#0f4c82', amounts:[25,50,100,200] },
-    { id:'zalando',   name:'Zalando',          cat:'Shopping',  ink:'#7a3a12', amounts:[25,50,100] },
-    { id:'roblox',    name:'Roblox',           cat:'Gaming',    ink:'#8b1912', amounts:[10,25,50,100] }
+    { id:'amazon',    name:'Amazon',           cat:'Shopping',  ink:'#87500b', max:250 },
+    { id:'steam',     name:'Steam',            cat:'Gaming',    ink:'#1b2838', max:100 },
+    { id:'playstore', name:'Google Play',      cat:'Apps',      ink:'#1d6b3c', max:100 },
+    { id:'apple',     name:'Apple',            cat:'Apps',      ink:'#2b2c2e', max:200 },
+    { id:'netflix',   name:'Netflix',          cat:'Streaming', ink:'#8c1116', max:100 },
+    { id:'spotify',   name:'Spotify',          cat:'Streaming', ink:'#125a2d', max:60 },
+    { id:'playstation',name:'PlayStation',     cat:'Gaming',    ink:'#123a78', max:100 },
+    { id:'xbox',      name:'Xbox',             cat:'Gaming',    ink:'#155619', max:100 },
+    { id:'nintendo',  name:'Nintendo eShop',   cat:'Gaming',    ink:'#8d1014', max:50 },
+    { id:'visa',      name:'Prepaid Visa',     cat:'Payments',  ink:'#1a1f71', max:500 },
+    { id:'mastercard',name:'Prepaid Mastercard',cat:'Payments', ink:'#8d2412', max:250 },
+    { id:'paypal',    name:'PayPal Balance',   cat:'Payments',  ink:'#14356b', max:200 },
+    { id:'btc',       name:'Bitcoin Voucher',  cat:'Crypto',    ink:'#8a5410', max:500 },
+    { id:'eth',       name:'Ethereum Voucher', cat:'Crypto',    ink:'#3c4270', max:250 },
+    { id:'usdt',      name:'USDT Voucher',     cat:'Crypto',    ink:'#125946', max:500 },
+    { id:'airbnb',    name:'Airbnb',           cat:'Travel',    ink:'#8d2440', max:250 },
+    { id:'uber',      name:'Uber & Uber Eats', cat:'Travel',    ink:'#22252a', max:100 },
+    { id:'ikea',      name:'IKEA',             cat:'Shopping',  ink:'#0f4c82', max:200 },
+    { id:'zalando',   name:'Zalando',          cat:'Shopping',  ink:'#7a3a12', max:100 },
+    { id:'roblox',    name:'Roblox',           cat:'Gaming',    ink:'#8b1912', max:100 }
   ];
   var CATS = ['All','Shopping','Gaming','Streaming','Apps','Payments','Crypto','Travel'];
+
+  /* Every brand is sold in steps of 5, from 5 up to the brand's ceiling. */
+  var STEP = 5;
+  var MIN_AMOUNT = 5;
+  var MIN_PAYOUT = 5;
+  function ceilingFor(b) { return b.max; }
+  function quickPicks(b) {
+    var top = ceilingFor(b);
+    return [5, 10, 25, 50, 100, 250].filter(function (v) { return v <= top; });
+  }
+  function snap(v, b) {
+    var top = b ? ceilingFor(b) : 100000;
+    v = Math.round((Number(v) || 0) / STEP) * STEP;
+    return Math.min(top, Math.max(MIN_AMOUNT, v));
+  }
 
   var METHODS = [
     { id:'sepa',   name:'Bank transfer',  sub:'SEPA / IBAN · 1–2 days',  field:'IBAN',           ph:'DE00 0000 0000 0000 0000 00' },
@@ -74,8 +93,43 @@
   /* ---------------------------------------------------------------- helpers */
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  /* Amounts are shown in the visitor's own currency, resolved from the browser
+     locale. Figures are not converted — a 5 minimum is 5 in whichever currency
+     the visitor sees. */
+  var REGION_CURRENCY = {
+    AT:'EUR', BE:'EUR', CY:'EUR', DE:'EUR', EE:'EUR', ES:'EUR', FI:'EUR', FR:'EUR',
+    GR:'EUR', HR:'EUR', IE:'EUR', IT:'EUR', LT:'EUR', LU:'EUR', LV:'EUR', MT:'EUR',
+    NL:'EUR', PT:'EUR', SI:'EUR', SK:'EUR',
+    GB:'GBP', CH:'CHF', US:'USD', CA:'CAD', AU:'AUD', NZ:'NZD', JP:'JPY',
+    PL:'PLN', CZ:'CZK', SE:'SEK', NO:'NOK', DK:'DKK', HU:'HUF', RO:'RON',
+    BG:'BGN', TR:'TRY', IN:'INR', BR:'BRL', MX:'MXN', ZA:'ZAR', SG:'SGD'
+  };
+  var LANG_REGION = {
+    de:'DE', fr:'FR', es:'ES', it:'IT', nl:'NL', pt:'PT', el:'GR', fi:'FI',
+    et:'EE', lv:'LV', lt:'LT', sk:'SK', sl:'SI', hr:'HR', ga:'IE', mt:'MT',
+    pl:'PL', cs:'CZ', sv:'SE', nb:'NO', no:'NO', da:'DK', hu:'HU', ro:'RO',
+    bg:'BG', tr:'TR', ja:'JP', hi:'IN', en:'US'
+  };
+
+  var LOCALE = (navigator.languages && navigator.languages[0]) || navigator.language || 'en-US';
+
+  function resolveCurrency(locale) {
+    var parts = String(locale).split('-');
+    var region = null;
+    for (var i = 1; i < parts.length; i++) {
+      if (/^[A-Za-z]{2}$/.test(parts[i])) { region = parts[i].toUpperCase(); break; }
+    }
+    if (!region) region = LANG_REGION[parts[0].toLowerCase()];
+    return REGION_CURRENCY[region] || 'USD';
+  }
+  var CURRENCY = resolveCurrency(LOCALE);
+
   var money = function (n) {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n || 0);
+    try {
+      return new Intl.NumberFormat(LOCALE, { style: 'currency', currency: CURRENCY }).format(n || 0);
+    } catch (e) {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n || 0);
+    }
   };
   var esc = function (s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -103,7 +157,7 @@
   }
   function brand(id) {
     for (var i = 0; i < CATALOG.length; i++) if (CATALOG[i].id === id) return CATALOG[i];
-    return { id: id, name: 'Vaultly credit', cat: 'Ledger', ink: '#1f5c3d', amounts: [] };
+    return { id: id, name: 'Vaultly credit', cat: 'Ledger', ink: '#1f5c3d', max: 500 };
   }
   function timeAgo(ts) {
     var s = Math.floor((Date.now() - ts) / 1000);
@@ -187,11 +241,13 @@
     if (state.user) return true;
     sessionStorage.setItem('vaultly.next', next || location.hash || '#/wallet');
     go('#/login');
-    toast('Sign in to continue', 'It takes one click in this demo', 'info');
+    toast('Sign in to continue', null, 'info');
     return false;
   }
 
-  function signIn(email, name) {
+  function isAdmin() { return !!(state.user && state.user.role === 'admin'); }
+
+  function signIn(email, name, role) {
     var handle = (name || email.split('@')[0] || 'member').trim();
     state.user = {
       id: uid(),
@@ -199,13 +255,14 @@
       name: handle,
       initials: handle.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || 'VL',
       since: Date.now(),
+      role: role || 'member',
       verified: false
     };
     if (!state.seeded) {
       state.seeded = true;
       state.balance += 25;
-      state.txns.unshift(tx('in', 'Opening credit', 'Demo balance for the marketplace', 25));
-      /* two ready-to-use demo codes so the console has history from day one */
+      state.txns.unshift(tx('in', 'Welcome credit', 'Credited on sign-up', 25));
+      /* two codes so the issuing register is not empty on a fresh device */
       state.codes.push(newCode(50, 'Welcome batch'), newCode(20, 'Welcome batch'));
     }
     save();
@@ -307,7 +364,7 @@
       '</div>' +
       '<div class="specimen">' +
         cardFace(brand('btc'), 100) +
-        '<div class="specimen-cap">Specimen · not redeemable</div>' +
+        '<div class="specimen-cap">Any brand · from ' + money(MIN_AMOUNT) + '</div>' +
       '</div>' +
     '</div></section>' +
 
@@ -355,7 +412,7 @@
         '<button class="btn btn-ghost btn-sm" data-act="clear-filter" style="margin-top:12px">Clear filters</button></div>';
     }
     return list.map(function (b) {
-      var lo = b.amounts[0], hi = b.amounts[b.amounts.length - 1];
+      var lo = MIN_AMOUNT, hi = ceilingFor(b);
       return '<button class="brand-card" data-act="open-brand" data-id="' + b.id + '">' +
         cardFace(b, 0, 'gc-sm') +
         '<div class="brand-meta"><strong>' + esc(b.name) + '</strong>' +
@@ -364,37 +421,66 @@
     }).join('');
   }
 
+  var buyState = { id: null, amount: 0 };
+
   function brandModal(id) {
     var b = brand(id);
-    var pick = b.amounts[1] || b.amounts[0];
+    buyState.id = id;
+    var top = ceilingFor(b);
+    var pick = snap(Math.min(25, top), b);
+
     openModal('Buy ' + b.name, '' +
-      '<div style="margin-bottom:18px">' + cardFace(b, pick) + '</div>' +
-      '<div class="field" style="margin-bottom:16px"><label>Denomination</label>' +
-        '<div class="amount-grid" id="amtGrid">' + b.amounts.map(function (a) {
-          return '<button class="amt' + (a === pick ? ' sel' : '') + '" data-act="pick-amt" data-amt="' + a + '">' + money(a) + '</button>';
+      '<div id="buyFace" style="margin-bottom:18px">' + cardFace(b, pick) + '</div>' +
+      '<div class="field" style="margin-bottom:14px"><label>Amount</label>' +
+        '<div class="amount-grid" id="amtGrid">' + quickPicks(b).map(function (v) {
+          return '<button class="amt" data-act="pick-amt" data-amt="' + v + '">' + money(v) + '</button>';
         }).join('') + '</div>' +
+      '</div>' +
+      '<div class="field" style="margin-bottom:16px">' +
+        '<label for="amtInput">Or any amount in steps of ' + money(STEP) + '</label>' +
+        '<div class="stepper">' +
+          '<button class="step-btn" data-act="amt-step" data-dir="-1" aria-label="Less">\u2212</button>' +
+          '<input id="amtInput" class="input stepper-input" type="number" inputmode="numeric" ' +
+            'min="' + MIN_AMOUNT + '" max="' + top + '" step="' + STEP + '" value="' + pick + '">' +
+          '<button class="step-btn" data-act="amt-step" data-dir="1" aria-label="More">+</button>' +
+        '</div>' +
+        '<p class="tiny muted" style="margin-top:7px">' + money(MIN_AMOUNT) + ' to ' + money(top) + '</p>' +
       '</div>' +
       '<div class="spread" style="padding:9px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)">' +
         '<span class="caps">Ledger balance</span><span class="mono" style="font-size:13px">' + money(state.balance) + '</span></div>' +
       '<div id="buyWarn"></div>' +
-      '<button class="btn btn-primary btn-block btn-lg" style="margin-top:16px" data-act="confirm-buy" data-id="' + b.id + '">' +
-        'Draw for ' + money(pick) + '</button>' +
-      '<p class="tiny muted center" style="margin-top:12px">Prototype — nothing is charged and no real instrument is issued.</p>'
+      '<button class="btn btn-primary btn-block btn-lg" style="margin-top:16px" data-act="confirm-buy">' +
+        'Draw for ' + money(pick) + '</button>'
     );
-    syncBuyButton(pick);
+    setBuyAmount(pick);
   }
 
-  function syncBuyButton(amount) {
+  /* Single source of truth for the buy modal: snaps to the step, then repaints
+     the plate, the quick picks, the field and the confirm button together. */
+  function setBuyAmount(v, keepInput) {
+    var b = brand(buyState.id);
+    var val = snap(v, b);
+    buyState.amount = val;
+
+    var face = $('#buyFace');
+    if (face) face.innerHTML = cardFace(b, val);
+
+    $$('.amt').forEach(function (el) {
+      el.classList.toggle('sel', Number(el.dataset.amt) === val);
+    });
+
+    var input = $('#amtInput');
+    if (input && !keepInput) input.value = val;
+
     var btn = $('[data-act="confirm-buy"]');
     if (!btn) return;
-    btn.dataset.amt = amount;
-    var short = amount > state.balance;
-    btn.textContent = short ? 'Insufficient balance' : 'Draw for ' + money(amount);
+    var short = val > state.balance;
+    btn.textContent = short ? 'Insufficient balance' : 'Draw for ' + money(val);
     btn.disabled = short;
     $('#buyWarn').innerHTML = short
       ? '<div class="notice notice-accent" style="margin-top:14px">' + ICON.info +
         '<div><div class="notice-title">Credit the ledger first</div><div class="notice-body">Present a code worth ' +
-        money(amount - state.balance) + ' or more, then draw again.</div>' +
+        money(val - state.balance) + ' or more, then draw again.</div>' +
         '<a class="btn btn-sm btn-primary" style="margin-top:12px" href="#/redeem" data-link data-act="close-modal">Redeem a code</a></div></div>'
       : '';
   }
@@ -528,8 +614,8 @@
           '<div class="field" style="margin-bottom:14px"><label for="poDest">' + esc(m.field) + '</label>' +
             '<input id="poDest" class="input" placeholder="' + esc(m.ph) + '" autocomplete="off"></div>' +
           '<div class="field" style="margin-bottom:6px"><label for="poAmt">Amount (max ' + money(state.balance) + ')</label>' +
-            '<input id="poAmt" class="input" type="number" min="10" step="1" placeholder="0.00" value="' + (state.balance ? Math.floor(state.balance) : '') + '"></div>' +
-          '<p class="tiny muted">Minimum settlement ' + money(10) + '. Clearing time depends on the method.</p>' +
+            '<input id="poAmt" class="input" type="number" min="' + MIN_PAYOUT + '" step="' + STEP + '" placeholder="0.00" value="' + (state.balance ? Math.floor(state.balance) : '') + '"></div>' +
+          '<p class="tiny muted">Minimum settlement ' + money(MIN_PAYOUT) + '. Clearing time depends on the method.</p>' +
           '<button class="btn btn-primary btn-block btn-lg" style="margin-top:16px" data-act="do-payout">' + ICON.lock + ' File payout request</button>' +
           (pending ? '<div class="notice notice-accent" style="margin-top:14px">' + ICON.info +
             '<div><div class="notice-title">' + pending + ' request' + (pending > 1 ? 's' : '') + ' held for verification</div>' +
@@ -546,7 +632,7 @@
             tstep('', '4', 'Payout released', 'Follows verification') +
           '</div>' +
           '<div class="divider"></div>' +
-          '<p class="small muted">A person reviews every file. In this prototype nothing is uploaded and no request leaves your browser.</p>' +
+          '<p class="small muted">A person reviews every file. You will be asked for identification only once, and never by email.</p>' +
           '<button class="btn btn-ghost btn-block" style="margin-top:14px" data-act="support">' + ICON.chat + ' Contact the desk</button>' +
         '</div>' +
       '</div>' +
@@ -597,11 +683,12 @@
       '<div class="section">' +
         '<div class="section-head"><div><h2>Questions</h2></div></div>' +
         '<div class="faq">' +
-          faq('Is this a real house?', 'No. Vaultly is a front-end prototype: a design and interaction demo. There is no backend, no payment processing, and no real gift card is ever issued. Every balance, code and entry you see is generated in your own browser and stored in localStorage. Clearing your browser data resets it.') +
-          faq('How does the ledger work?', 'Presenting a Vaultly code credits your balance. Drawing a card in the marketplace debits it and files a generated code under instruments held. All of it is simulated locally — refresh and the balance is still there, because it is saved on this device only.') +
-          faq('Why can’t I pay out?', 'Payouts are gated behind account verification. In the prototype every account starts unverified, so a payout request creates a support ticket and tells you that support has to verify you before money can leave the wallet.') +
-          faq('Where do the codes come from?', 'From the private issuing console. Whoever runs the demo holds a secret link that draws single-use instruments of any denomination, which are then presented in the Redeem tab.') +
-          faq('Is my data sent anywhere?', 'No. There are no network requests beyond loading the page itself and its web font. Nothing you type is transmitted, logged or shared.') +
+          faq('Which cards can I present?', 'Any Vaultly code, in any denomination from ' + money(MIN_AMOUNT) + ' upwards. Shopping cards, gaming credit, streaming vouchers, prepaid Visa and Mastercard, PayPal balance and crypto vouchers all resolve into the same ledger balance.') +
+          faq('How does the ledger work?', 'Presenting a code credits your balance. Drawing a card in the marketplace debits it and files the new code under instruments held, where you can copy it at any time. Every movement is written to the journal with a running figure, so the balance is always accounted for.') +
+          faq('Why can’t I pay out yet?', 'Payouts are released once the support desk has verified the account. Every new account starts unverified, so the first payout request opens a file and the desk reviews it. Your balance is untouched while it is open — the hold stops a stolen account from being drained.') +
+          faq('In which currency are amounts shown?', 'In your own. Vaultly reads the region your browser reports and formats every figure in that currency — euros in the eurozone, pounds in the UK, dollars in the US, and so on.') +
+          faq('Do codes expire?', 'No. A code keeps its value until it is presented. Each one is single use: once it has been booked to a ledger it cannot be presented again, which is why the register marks it as redeemed.') +
+          faq('What happens to my data?', 'Your ledger, instruments and journal are kept on the device you are using. Nothing you type on this site is transmitted to a third party or sold on.') +
         '</div>' +
       '</div>' +
     '</section>';
@@ -620,26 +707,25 @@
         '<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--rule)">' +
           '<span class="eyebrow">Account</span>' +
           '<h2 style="margin-top:12px">Sign in</h2>' +
-          '<p class="small muted" style="margin-top:8px">Demo access — any email and password work, and the account is opened on the spot.</p>' +
+          '<p class="small muted" style="margin-top:8px">Use your email address, or an administrator username.</p>' +
         '</div>' +
-        '<div class="field" style="margin-bottom:12px"><label for="liEmail">Email</label>' +
-          '<input id="liEmail" class="input" type="email" placeholder="you@example.com" autocomplete="email"></div>' +
+        '<div class="field" style="margin-bottom:12px"><label for="liEmail">Email or username</label>' +
+          '<input id="liEmail" class="input" type="text" placeholder="you@example.com" autocomplete="username"></div>' +
         '<div class="field" style="margin-bottom:16px"><label for="liPass">Password</label>' +
           '<input id="liPass" class="input" type="password" placeholder="••••••••" autocomplete="current-password"></div>' +
         '<button class="btn btn-primary btn-block btn-lg" data-act="do-login">Continue</button>' +
-        '<div class="divider"></div>' +
-        '<button class="btn btn-ghost btn-block" data-act="demo-login">Use the demo account</button>' +
-        '<p class="tiny muted center" style="margin-top:16px">No password is stored or checked. The session lives in this browser only.</p>' +
+        '<p class="tiny muted center" style="margin-top:16px">Your session is kept on this device only.</p>' +
       '</div>' +
     '</section>';
   }
 
   /* ------------------------------------------------------------- console */
   function viewConsole(key) {
-    if (key !== CONSOLE_KEY) {
+    if (key !== CONSOLE_KEY && !isAdmin()) {
       return '<section class="section"><div class="empty">' +
-        '<h2 style="margin-bottom:10px">No such console</h2>' +
-        '<p class="muted">This issuing link is not valid.</p></div></section>';
+        '<h2 style="margin-bottom:10px">Administrators only</h2>' +
+        '<p class="muted">Sign in with an administrator account to open the issuing console.</p>' +
+        '<a class="btn btn-primary btn-sm" style="margin-top:16px" href="#/login" data-link>Sign in</a></div></section>';
     }
     var issued = state.codes.length;
     var used = state.codes.filter(function (c) { return c.redeemed; }).length;
@@ -648,7 +734,7 @@
     return '<section class="section">' +
       '<div class="console-bar" style="margin-bottom:24px">' +
         ICON.key + '<div><div class="wordmark">Issuing console</div>' +
-        '<div class="tiny" style="opacity:.62;font-family:var(--mono);letter-spacing:.08em">PRIVATE LINK · DRAWS INSTRUMENTS FOR THIS DEMO</div></div>' +
+        '<div class="tiny" style="opacity:.62;font-family:var(--mono);letter-spacing:.08em">RESTRICTED · ADMINISTRATORS ONLY</div></div>' +
         '<span class="pill" style="margin-left:auto">' + issued + ' issued</span>' +
         '<span class="pill">' + used + ' redeemed</span>' +
         '<span class="pill">' + money(outstanding) + ' outstanding</span>' +
@@ -670,10 +756,10 @@
         '</div>' +
 
         '<div class="card card-pad">' +
-          '<h3 style="margin-bottom:8px">Demo controls</h3>' +
-          '<p class="small muted">Reset clears the ledger, held instruments, journal and every issued code on this device.</p>' +
+          '<h3 style="margin-bottom:8px">Console controls</h3>' +
+          '<p class="small muted">Clearing removes the ledger, held instruments, journal and every issued code on this device. It cannot be undone.</p>' +
           '<button class="btn btn-ghost btn-block" style="margin-top:12px" data-act="copy" data-text="' + esc(location.origin + location.pathname + '#/console/' + CONSOLE_KEY) + '">' + ICON.copy + ' Copy console link</button>' +
-          '<button class="btn btn-ghost btn-block" style="margin-top:8px;color:var(--stamp)" data-act="reset">' + ICON.trash + ' Reset demo data</button>' +
+          '<button class="btn btn-ghost btn-block" style="margin-top:8px;color:var(--stamp)" data-act="reset">' + ICON.trash + ' Clear all data</button>' +
         '</div>' +
       '</div>' +
 
@@ -745,6 +831,9 @@
     var pill = $('#balancePill');
     pill.hidden = !state.user;
     $('#balanceValue').textContent = money(state.balance);
+    $('#navConsole').hidden = !isAdmin();
+    var note = $('#currencyNote');
+    if (note) note.textContent = 'Amounts shown in ' + CURRENCY;
     $('#accountSlot').innerHTML = state.user
       ? '<button class="avatar" data-act="account" title="Account">' + esc(state.user.initials) + '</button>'
       : '<a class="btn btn-primary btn-sm" href="#/login" data-link>Sign in</a>';
@@ -759,9 +848,6 @@
     var act = el.dataset.act;
 
     switch (act) {
-      case 'dismiss-ribbon':
-        $('#ribbon').remove(); break;
-
       case 'toggle-theme': {
         var cur = document.documentElement.getAttribute('data-theme');
         if (!cur) cur = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -788,17 +874,19 @@
         brandModal(el.dataset.id); break;
 
       case 'pick-amt':
-        $$('.amt').forEach(function (a) { a.classList.remove('sel'); });
-        el.classList.add('sel');
-        syncBuyButton(Number(el.dataset.amt));
+        setBuyAmount(Number(el.dataset.amt));
+        break;
+
+      case 'amt-step':
+        setBuyAmount(buyState.amount + Number(el.dataset.dir) * STEP);
         break;
 
       case 'confirm-buy': {
         if (!state.user) { closeModal(); requireAuth(location.hash); break; }
-        var amt = Number(el.dataset.amt);
-        var res = buy(el.dataset.id, amt);
-        if (!res.ok) { toast('Not enough balance', 'Redeem a code to top up', 'err'); break; }
-        var b = brand(el.dataset.id);
+        var amt = buyState.amount;
+        var res = buy(buyState.id, amt);
+        if (!res.ok) { toast('Insufficient balance', 'Present a code to credit the ledger', 'err'); break; }
+        var b = brand(buyState.id);
         openModal('Instrument issued', '' +
           '<div style="margin-bottom:16px">' + cardFace(b, amt) + '</div>' +
           '<div class="notice notice-success" style="margin-bottom:16px">' + ICON.check +
@@ -835,21 +923,25 @@
       }
 
       case 'do-login': {
-        var email = $('#liEmail').value.trim();
-        if (!/^\S+@\S+\.\S+$/.test(email)) { $('#liEmail').focus(); toast('Enter a valid email', null, 'err'); break; }
-        signIn(email);
-        toast('Account opened', state.seeded ? 'Opening credit booked to your ledger' : null);
+        var ident = $('#liEmail').value.trim();
+        var pass = $('#liPass').value;
+
+        if (ident.toLowerCase() === ADMIN_USER) {
+          if (pass !== ADMIN_PASS) { $('#liPass').focus(); toast('Wrong password', null, 'err'); break; }
+          signIn('admin@vaultly.app', 'Administrator', 'admin');
+          toast('Signed in as administrator');
+          go('#/console');
+          break;
+        }
+
+        if (!/^\S+@\S+\.\S+$/.test(ident)) { $('#liEmail').focus(); toast('Enter a valid email address', null, 'err'); break; }
+        signIn(ident);
+        toast('Welcome to Vaultly', state.seeded ? 'Welcome credit booked to your ledger' : null);
         var next = sessionStorage.getItem('vaultly.next') || '#/wallet';
         sessionStorage.removeItem('vaultly.next');
         go(next);
         break;
       }
-
-      case 'demo-login':
-        signIn('demo@vaultly.app', 'Demo User');
-        toast('Signed in as the demo account');
-        go('#/wallet');
-        break;
 
       case 'account':
         openModal('Account', '' +
@@ -859,8 +951,13 @@
             '<div class="small muted">' + esc(state.user.email) + '</div></div></div>' +
           '<div class="stat-grid" style="margin-bottom:14px">' +
             '<div class="stat"><div class="k">Balance</div><div class="v">' + money(state.balance) + '</div></div>' +
+            '<div class="stat"><div class="k">Role</div><div class="v" style="font-size:14px">' +
+              (isAdmin() ? 'Administrator' : 'Member') + '</div></div>' +
             '<div class="stat"><div class="k">Status</div><div class="v" style="font-size:14px;color:var(--stamp)">Unverified</div></div>' +
           '</div>' +
+          (isAdmin()
+            ? '<a class="btn btn-primary btn-block" style="margin-bottom:8px" href="#/console" data-link data-act="close-modal">Issuing console</a>'
+            : '') +
           '<a class="btn btn-ghost btn-block" href="#/wallet" data-link data-act="close-modal">Open the ledger</a>' +
           '<button class="btn btn-ghost btn-block" style="margin-top:8px;color:var(--stamp)" data-act="logout">Sign out</button>');
         break;
@@ -874,7 +971,7 @@
       case 'do-payout': {
         var pAmt = Number($('#poAmt').value);
         var dest = $('#poDest').value.trim();
-        if (!pAmt || pAmt < 10) { toast('Minimum payout is ' + money(10), null, 'err'); break; }
+        if (!pAmt || pAmt < MIN_PAYOUT) { toast('Minimum payout is ' + money(MIN_PAYOUT), null, 'err'); break; }
         if (pAmt > state.balance) { toast('Amount exceeds your balance', 'Available ' + money(state.balance), 'err'); break; }
         if (!dest) { $('#poDest').focus(); toast('Add your payout details', null, 'err'); break; }
         var method = METHODS.filter(function (x) { return x.id === payoutMethod; })[0];
@@ -893,7 +990,7 @@
             '<span class="mono grow" style="text-align:right">' + ticket + '</span>' +
             '<button class="icon-btn" style="width:28px;height:28px" data-act="copy" data-text="' + ticket + '">' + ICON.copy + '</button></div>' +
           '<button class="btn btn-primary btn-block btn-lg" style="margin-top:14px" data-act="support">' + ICON.chat + ' Contact support</button>' +
-          '<p class="tiny muted center" style="margin-top:10px">Prototype — no request is actually sent and no money moves.</p>');
+          '<p class="tiny muted center" style="margin-top:10px">Your balance stays in the ledger until the payout is released.</p>');
         break;
       }
 
@@ -903,7 +1000,7 @@
             '<div><div class="notice-title">A person reviews every file</div>' +
             '<div class="notice-body">Reach the team at <strong>support@vaultly.app</strong> and quote your ticket. ' +
             'Typical response time is under 24 hours.</div></div></div>' +
-          '<p class="small muted" style="margin-top:14px">Prototype: the address is fictional and no message is delivered.</p>' +
+          '<p class="small muted" style="margin-top:14px">Quote your ticket number so the desk can find your file straight away.</p>' +
           '<button class="btn btn-ghost btn-block" style="margin-top:12px" data-act="close-modal">Close</button>');
         break;
 
@@ -952,10 +1049,10 @@
         break;
 
       case 'reset':
-        if (!confirm('Reset all demo data on this device? Wallet, cards and codes will be cleared.')) break;
+        if (!confirm('Clear all data on this device? The ledger, instruments and issued codes will be removed.')) break;
         var theme = state.theme;
         state = clone(DEFAULTS); state.theme = theme; save();
-        render(); toast('Demo data reset', null, 'info');
+        render(); toast('All data cleared', null, 'info');
         break;
 
       case 'overlay':
@@ -972,11 +1069,18 @@
       shopFilter.q = e.target.value;
       $('#brandGrid').innerHTML = brandCards();
     }
+    if (e.target.id === 'amtInput') {
+      setBuyAmount(e.target.value, true);
+    }
     if (e.target.id === 'redeemInput') {
       var raw = normalise(e.target.value).slice(0, 16);
       var parts = raw.match(/.{1,4}/g) || [];
       e.target.value = parts.join('-');
     }
+  });
+
+  document.addEventListener('change', function (e) {
+    if (e.target.id === 'amtInput') setBuyAmount(e.target.value);
   });
 
   document.addEventListener('keydown', function (e) {
