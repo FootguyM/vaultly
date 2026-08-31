@@ -1,12 +1,13 @@
 /* ==========================================================================
-   Vaultly — marketplace client
+   VaultCards — marketplace client
    A static single-page app: hash router, view functions and a small state
    object persisted to localStorage under the key below.
    ========================================================================== */
 (function () {
   'use strict';
 
-  var STORE_KEY = 'vaultly.state.v1';
+  var STORE_KEY = 'vaultcards.state.v1';
+  var LEGACY_KEY = 'vaultly.state.v1';   /* pre-rebrand; read once, then retired */
   /* The console is reachable two ways: signed in as the administrator, or via
      the private link #/console/vt-9f2k-console.
      Note: this is a static site, so the credentials below ship in the page
@@ -80,7 +81,12 @@
   function load() {
     try {
       var raw = localStorage.getItem(STORE_KEY);
-      if (!raw) return clone(DEFAULTS);
+      if (!raw) {
+        raw = localStorage.getItem(LEGACY_KEY);
+        if (!raw) return clone(DEFAULTS);
+        localStorage.setItem(STORE_KEY, raw);
+        localStorage.removeItem(LEGACY_KEY);
+      }
       var parsed = JSON.parse(raw);
       var out = clone(DEFAULTS);
       for (var k in out) if (parsed[k] !== undefined) out[k] = parsed[k];
@@ -141,6 +147,9 @@
   var uid = function () { return Math.random().toString(36).slice(2, 10); };
 
   var ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; /* no O/0/I/1 */
+  var CODE_PREFIX = 'VC';
+  /* Longest first: 'VLT' predates the rebrand and its codes stay redeemable. */
+  var CODE_PREFIXES = ['VLT', CODE_PREFIX];
   function block(n) {
     var out = '';
     var buf = new Uint32Array(n);
@@ -152,14 +161,14 @@
     return out;
   }
   function makeCode(prefix) {
-    return (prefix || 'VLT') + '-' + block(4) + '-' + block(4) + '-' + block(4);
+    return (prefix || CODE_PREFIX) + '-' + block(4) + '-' + block(4) + '-' + block(4);
   }
   function normalise(v) {
     return String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   }
   function brand(id) {
     for (var i = 0; i < CATALOG.length; i++) if (CATALOG[i].id === id) return CATALOG[i];
-    return { id: id, name: 'Vaultly credit', cat: 'Ledger', ink: '#1f5c3d', max: 500 };
+    return { id: id, name: 'VaultCards credit', cat: 'Ledger', ink: '#1b3fd8', max: 500 };
   }
   function timeAgo(ts) {
     var s = Math.floor((Date.now() - ts) / 1000);
@@ -248,7 +257,7 @@
   /* ================================================================= domain */
   function requireAuth(next) {
     if (state.user) return true;
-    sessionStorage.setItem('vaultly.next', next || location.hash || '#/wallet');
+    sessionStorage.setItem('vaultcards.next', next || location.hash || '#/wallet');
     go('#/login');
     toast('Sign in to continue', null, 'info');
     return false;
@@ -256,6 +265,7 @@
 
   function isAdmin() { return !!(state.user && state.user.role === 'admin'); }
   function isPending() { return !!(state.user && state.user.role !== 'admin' && state.user.review === 'pending'); }
+  function canBuy() { return !!state.user && !isPending(); }
 
   /* Not a security measure — a static site cannot keep a secret. It only keeps
      plain passwords out of localStorage. */
@@ -368,7 +378,7 @@
   }
 
   function newCode(amount, label) {
-    return { code: makeCode('VLT'), amount: amount, label: label || '', created: Date.now(), redeemed: null };
+    return { code: makeCode(), amount: amount, label: label || '', created: Date.now(), redeemed: null };
   }
 
   function findCode(input) {
@@ -424,7 +434,7 @@
         '<div class="gc-serial">SER ' + serialFor(b.id + amount) + '</div>' +
       '</div>' +
       '<div class="gc-stub">' +
-        '<div class="gc-seal">VY</div>' +
+        '<div class="gc-seal">VC</div>' +
         '<div><div class="gc-denom">Value</div>' +
         '<div class="gc-amount">' + (amount ? money(amount) : '—') + '</div></div>' +
       '</div>' +
@@ -440,7 +450,7 @@
       '<div>' +
         '<span class="eyebrow">Clearing house for stored value</span>' +
         '<h1 style="margin-top:10px">Every gift card,<br>one ledger.</h1>' +
-        '<p class="lede">A gift card is money locked to one shop. Vaultly accepts any card, voucher or prepaid balance, books it into a single ledger, and lets you draw a new card on any other brand — or cash the balance out.</p>' +
+        '<p class="lede">A gift card is money locked to one shop. VaultCards accepts any card, voucher or prepaid balance, books it into a single ledger, and lets you draw a new card on any other brand — or cash the balance out.</p>' +
         '<div class="hero-cta">' +
           (state.user
             ? '<a class="btn btn-primary btn-lg" href="#/redeem" data-link>Redeem a code</a>'
@@ -462,7 +472,16 @@
     '<section class="section" id="market">' +
       '<div class="section-head"><div><h2>Marketplace</h2>' +
       '<p>Drawn against your ledger balance. The code is issued and shown to you the moment you confirm.</p></div>' +
-      '<span class="pill pill-accent">Instant issue</span></div>' +
+      (isPending()
+        ? '<span class="pill pill-warn">' + ICON.lock + ' Locked until verified</span>'
+        : '<span class="pill pill-accent">Instant issue</span>') + '</div>' +
+      (isPending()
+        ? '<div class="notice notice-stamp" style="margin-bottom:18px">' + ICON.lock +
+          '<div><div class="notice-title">Buying opens once your account is verified</div>' +
+          '<div class="notice-body">Presenting gift codes works now; drawing cards and payouts follow ' +
+          'once the review of your registration clears, expected ' + reviewWindow().from +
+          ' \u2013 ' + reviewWindow().to + '</div></div></div>'
+        : '') +
 
       '<div class="toolbar">' +
         '<div class="search">' + ICON.search +
@@ -473,7 +492,7 @@
         }).join('') + '</div>' +
       '</div>' +
 
-      '<div class="market" id="brandGrid">' + brandCards() + '</div>' +
+      '<div class="market" id="brandGrid">' + brandCards(true) + '</div>' +
     '</section>' +
 
     '<section class="section">' +
@@ -491,7 +510,7 @@
       '<p>' + esc(body) + '</p></div>';
   }
 
-  function brandCards() {
+  function brandCards(stagger) {
     var q = shopFilter.q.toLowerCase().trim();
     var list = CATALOG.filter(function (b) {
       var okCat = shopFilter.cat === 'All' || b.cat === shopFilter.cat;
@@ -502,8 +521,10 @@
       return '<div class="empty" style="grid-column:1/-1;margin-top:16px">Nothing matches “' + esc(shopFilter.q) + '”.<br>' +
         '<button class="btn btn-ghost btn-sm" data-act="clear-filter" style="margin-top:12px">Clear filters</button></div>';
     }
-    return list.map(function (b) {
-      return '<button class="market-row" data-act="open-brand" data-id="' + b.id + '">' +
+    return list.map(function (b, i) {
+      return '<button class="market-row' + (stagger ? ' row-enter' : '') + '"' +
+        (stagger ? ' style="--i:' + Math.min(i, 14) + '"' : '') +
+        ' data-act="open-brand" data-id="' + b.id + '">' +
         '<span class="swatch" style="--c-ink:' + b.ink + '"></span>' +
         '<span class="mr-name">' + esc(b.name) + '</span>' +
         '<span class="mr-cat">' + esc(b.cat) + '</span>' +
@@ -573,6 +594,27 @@
 
     var btn = $('[data-act="confirm-buy"]');
     if (!btn) return;
+
+    /* Purchases stay closed until the registration review clears. */
+    if (!state.user) {
+      btn.textContent = 'Sign in to buy';
+      btn.disabled = false;
+      $('#buyWarn').innerHTML = '';
+      return;
+    }
+    if (isPending()) {
+      var win = reviewWindow();
+      btn.textContent = 'Locked until verified';
+      btn.disabled = true;
+      $('#buyWarn').innerHTML =
+        '<div class="notice notice-stamp" style="margin-top:14px">' + ICON.lock +
+        '<div><div class="notice-title">Purchases open once your account is verified</div>' +
+        '<div class="notice-body">You can keep presenting codes in the meantime. Your registration ' +
+        'is still being reviewed by hand, expected ' + win.from + ' \u2013 ' + win.to + '</div>' +
+        '<a class="btn btn-sm btn-ghost" style="margin-top:12px" href="#/payout" data-link data-act="close-modal">See the file</a></div></div>';
+      return;
+    }
+
     var short = val > state.balance;
     btn.textContent = short ? 'Insufficient balance' : 'Draw for ' + money(val);
     btn.disabled = short;
@@ -590,11 +632,11 @@
       '<div style="margin-bottom:26px">' +
         '<span class="eyebrow">Redeem</span>' +
         '<h1 style="margin-top:10px">Present a code for credit</h1>' +
-        '<p class="lede">Any Vaultly code, in any denomination. The value is booked to your ledger immediately and can be drawn against any brand in the marketplace.</p>' +
+        '<p class="lede">Any VaultCards code, in any denomination. The value is booked to your ledger immediately and can be drawn against any brand in the marketplace.</p>' +
       '</div>' +
       '<div class="card card-pad">' +
         '<div class="field"><label for="redeemInput">Instrument number</label>' +
-          '<input id="redeemInput" class="code-input" placeholder="VLT-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" maxlength="19">' +
+          '<input id="redeemInput" class="code-input" placeholder="VC-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" maxlength="18">' +
         '</div>' +
         '<button class="btn btn-primary btn-block btn-lg" style="margin-top:16px" data-act="do-redeem">Book to ledger</button>' +
         '<p class="tiny muted center" style="margin-top:12px">Single use. Dashes optional.</p>' +
@@ -651,8 +693,8 @@
           '<div><div class="notice-title">Account under review · expected ' +
             reviewWindow().from + ' – ' + reviewWindow().to + '</div>' +
           '<div class="notice-body">Every registration is checked by a person before payouts open, ' +
-          'which keeps bots and AI agents out of the ledger. Redeeming codes and drawing cards is ' +
-          'unaffected. <a href="#/payout" data-link style="color:var(--green);font-weight:600">See the file</a>.' +
+          'which keeps bots and AI agents out of the ledger. Presenting gift codes works now; buying ' +
+          'cards and payouts follow once it clears. <a href="#/payout" data-link class="link">See the file</a>.' +
           '</div></div></div>'
         : '') +
 
@@ -712,7 +754,7 @@
         'and that takes ' + REVIEW_DAYS_MIN + ' to ' + REVIEW_DAYS_MAX + ' working days.</strong> ' +
         'We do this because scripted bots and AI agents are the main way stored-value accounts get ' +
         'abused, and a captcha does not stop them. Until the review clears, your balance stays in ' +
-        'the ledger — you can keep redeeming codes and drawing cards in the meantime.</div>' +
+        'the ledger, and you can keep presenting gift codes in the meantime.</div>' +
         '<div class="notice-body" style="margin-top:9px">Registered ' +
           new Date(state.user.since).toLocaleDateString(LOCALE) + ' · review expected ' +
           reviewWindow().from + ' – ' + reviewWindow().to + '</div></div>' +
@@ -770,7 +812,7 @@
       '<div style="max-width:70ch">' +
         '<span class="eyebrow">The concept</span>' +
         '<h1 style="margin-top:10px">A gift card is money with someone else\u2019s name on it</h1>' +
-        '<p class="lede">Get one for a shop you never use and it sits in a drawer until it expires. Vaultly is a clearing house: every card, voucher and prepaid balance is accepted, booked into one ledger, and reissued as whatever you actually want.</p>' +
+        '<p class="lede">Get one for a shop you never use and it sits in a drawer until it expires. VaultCards is a clearing house: every card, voucher and prepaid balance is accepted, booked into one ledger, and reissued as whatever you actually want.</p>' +
       '</div>' +
 
       '<div class="flow" style="margin-top:30px">' +
@@ -803,11 +845,11 @@
       '<div class="section">' +
         '<div class="section-head"><div><h2>Questions</h2></div></div>' +
         '<div class="faq">' +
-          faq('Which cards can I present?', 'Any Vaultly code, in any denomination from ' + money(MIN_AMOUNT) + ' upwards. Shopping cards, gaming credit, streaming vouchers, prepaid Visa and Mastercard, PayPal balance and crypto vouchers all resolve into the same ledger balance.') +
+          faq('Which cards can I present?', 'Any VaultCards code, in any denomination from ' + money(MIN_AMOUNT) + ' upwards. Shopping cards, gaming credit, streaming vouchers, prepaid Visa and Mastercard, PayPal balance and crypto vouchers all resolve into the same ledger balance.') +
           faq('How does the ledger work?', 'Presenting a code credits your balance. Drawing a card in the marketplace debits it and files the new code under instruments held, where you can copy it at any time. Every movement is written to the journal with a running figure, so the balance is always accounted for.') +
-          faq('Why can’t I pay out yet?', 'Because your registration is still being reviewed. Every new account is checked by a person before payouts are released, which takes ' + REVIEW_DAYS_MIN + ' to ' + REVIEW_DAYS_MAX + ' working days. Your balance is untouched while the review is open, and redeeming codes and drawing cards works normally throughout.') +
+          faq('Why can’t I pay out yet?', 'Because your registration is still being reviewed. Every new account is checked by a person before payouts are released, which takes ' + REVIEW_DAYS_MIN + ' to ' + REVIEW_DAYS_MAX + ' working days. Your balance is untouched while the review is open, and presenting gift codes works normally throughout. Buying cards unlocks together with payouts.') +
           faq('Why is the review done by hand?', 'Because the alternative does not work. Scripted bots and AI agents are the main way stored-value accounts get abused at scale, and they clear captchas and automated checks routinely. A person looking at each registration is slower, and it is the part of the process that actually holds. It is a one-time check — once your account is cleared it stays cleared.') +
-          faq('In which currency are amounts shown?', 'In your own. Vaultly reads the region your browser reports and formats every figure in that currency — euros in the eurozone, pounds in the UK, dollars in the US, and so on.') +
+          faq('In which currency are amounts shown?', 'In your own. VaultCards reads the region your browser reports and formats every figure in that currency — euros in the eurozone, pounds in the UK, dollars in the US, and so on.') +
           faq('Do codes expire?', 'No. A code keeps its value until it is presented. Each one is single use: once it has been booked to a ledger it cannot be presented again, which is why the register marks it as redeemed.') +
           faq('What happens to my data?', 'Your ledger, instruments and journal are kept on the device you are using. Nothing you type on this site is transmitted to a third party or sold on.') +
         '</div>' +
@@ -852,12 +894,11 @@
   function viewLogin() {
     return '<section class="auth-wrap">' +
       '<div class="card card-pad">' +
-        '<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--rule)">' +
-          '<span class="eyebrow">Account</span>' +
-          '<h2 style="margin-top:12px">Sign in</h2>' +
-          '<p class="small muted" style="margin-top:8px">Use your email address, or an administrator username.</p>' +
+        '<div class="auth-head">' +
+          '<h2>Sign in</h2>' +
+          '<p class="small muted">Welcome back to your ledger.</p>' +
         '</div>' +
-        '<div class="field" style="margin-bottom:12px"><label for="liEmail">Email or username</label>' +
+        '<div class="field" style="margin-bottom:14px"><label for="liEmail">Email</label>' +
           '<input id="liEmail" class="input" type="text" placeholder="you@example.com" autocomplete="username"></div>' +
         pwField('liPass', 'Password', 'current-password') +
         '<button class="btn btn-primary btn-block btn-lg" style="margin-top:18px" data-act="do-login">Continue</button>' +
@@ -968,6 +1009,9 @@
     if (html === '') return;
 
     view.innerHTML = html;
+    view.classList.remove('view-enter');
+    void view.offsetWidth;          /* restart the animation on every route */
+    view.classList.add('view-enter');
     $$('#nav a').forEach(function (a) {
       a.classList.toggle('active', a.dataset.route === (r.name || 'shop'));
     });
@@ -981,10 +1025,20 @@
     }
   }
 
+  var lastBalanceShown = null;
   function renderChrome() {
     var pill = $('#balancePill');
     pill.hidden = !state.user;
-    $('#balanceValue').textContent = money(state.balance);
+
+    var figure = money(state.balance);
+    var el = $('#balanceValue');
+    if (lastBalanceShown !== null && lastBalanceShown !== figure && !pill.hidden) {
+      pill.classList.remove('pulse');
+      void pill.offsetWidth;
+      pill.classList.add('pulse');
+    }
+    lastBalanceShown = figure;
+    el.textContent = figure;
     $('#navConsole').hidden = !isAdmin();
     var note = $('#currencyNote');
     if (note) note.textContent = 'Amounts shown in ' + CURRENCY;
@@ -1038,6 +1092,7 @@
 
       case 'confirm-buy': {
         if (!state.user) { closeModal(); requireAuth(location.hash); break; }
+        if (isPending()) { toast('Purchases are locked', 'Your account is still being verified', 'err'); break; }
         var amt = buyState.amount;
         var res = buy(buyState.id, amt);
         if (!res.ok) { toast('Insufficient balance', 'Present a code to credit the ledger', 'err'); break; }
@@ -1083,7 +1138,7 @@
 
         if (ident.toLowerCase() === ADMIN_USER) {
           if (pass !== ADMIN_PASS) { $('#liPass').focus(); toast('Wrong password', null, 'err'); break; }
-          signIn({ id: 'admin', email: 'admin@vaultly.app', name: 'Administrator',
+          signIn({ id: 'admin', email: 'admin@vaultcards.app', name: 'Administrator',
                    since: Date.now(), role: 'admin', review: 'verified' }, 'admin');
           toast('Signed in as administrator');
           go('#/console');
@@ -1102,8 +1157,8 @@
 
         signIn(acc);
         toast('Signed in', acc.name);
-        var next = sessionStorage.getItem('vaultly.next') || '#/wallet';
-        sessionStorage.removeItem('vaultly.next');
+        var next = sessionStorage.getItem('vaultcards.next') || '#/wallet';
+        sessionStorage.removeItem('vaultcards.next');
         go(next);
         break;
       }
@@ -1123,8 +1178,8 @@
         queueModal('Account open', '' +
           '<div class="notice notice-ok">' + ICON.check +
             '<div><div class="notice-title">Welcome, ' + esc(state.user.name) + '</div>' +
-            '<div class="notice-body">Your ledger is open and empty. Present a gift code to credit it, ' +
-            'then draw a card on any brand in the marketplace.</div></div></div>' +
+            '<div class="notice-body">Your ledger is open and empty. Present a gift code to credit it. ' +
+            'Buying cards unlocks once your registration has been reviewed.</div></div></div>' +
           '<a class="btn btn-ghost btn-block" style="margin-top:12px" href="#/redeem" data-link data-act="close-modal">Present a code</a>' +
           '<button class="btn btn-primary btn-block btn-lg" style="margin-top:18px" data-act="close-modal">Open the ledger</button>');
         go('#/wallet');
@@ -1188,7 +1243,7 @@
         openModal('Support', '' +
           '<div class="notice notice-accent">' + ICON.chat +
             '<div><div class="notice-title">A person reviews every file</div>' +
-            '<div class="notice-body">Reach the team at <strong>support@vaultly.app</strong> and quote your ticket. ' +
+            '<div class="notice-body">Reach the team at <strong>support@vaultcards.app</strong> and quote your ticket. ' +
             'Typical response time is under 24 hours.</div></div></div>' +
           '<p class="small muted" style="margin-top:14px">Quote your ticket number so the desk can find your file straight away.</p>' +
           '<button class="btn btn-ghost btn-block" style="margin-top:12px" data-act="close-modal">Close</button>');
@@ -1274,9 +1329,18 @@
       setBuyAmount(e.target.value, true);
     }
     if (e.target.id === 'redeemInput') {
+      /* Group around the issue prefix so what is typed matches what was issued.
+         Codes issued before the rebrand carry the longer prefix and must still
+         format — and redeem — unchanged, so never truncate past the longest. */
       var raw = normalise(e.target.value).slice(0, 16);
-      var parts = raw.match(/.{1,4}/g) || [];
-      e.target.value = parts.join('-');
+      var head = '';
+      for (var pi = 0; pi < CODE_PREFIXES.length; pi++) {
+        if (raw.indexOf(CODE_PREFIXES[pi]) === 0) { head = CODE_PREFIXES[pi]; break; }
+      }
+      if (head) raw = raw.slice(0, head.length + 12);
+      var body = head ? raw.slice(head.length) : raw;
+      var parts = body.match(/.{1,4}/g) || [];
+      e.target.value = (head ? [head].concat(parts) : parts).join('-');
     }
   });
 
@@ -1304,6 +1368,19 @@
     if (id === 'genAmt' || id === 'genQty' || id === 'genLabel') { e.preventDefault(); $('[data-act="generate"]').click(); }
     if (id === 'consoleKey') { e.preventDefault(); $('[data-act="open-console"]').click(); }
   });
+
+  /* The footer sits below the fold and only fades in once reached, so it never
+     competes with the page on first paint. */
+  (function revealFooter() {
+    var footer = $('.site-footer');
+    if (!footer) return;
+    if (!('IntersectionObserver' in window)) { footer.classList.add('in'); return; }
+    new IntersectionObserver(function (entries, obs) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { footer.classList.add('in'); obs.unobserve(en.target); }
+      });
+    }, { threshold: 0.08 }).observe(footer);
+  })();
 
   window.addEventListener('hashchange', render);
 

@@ -1,4 +1,4 @@
-# Vaultly
+# VaultCards
 
 Prototyp eines universellen Gift-Card-Marktplatzes: jede Geschenkkarte, jeder Voucher und
 jedes Prepaid-Guthaben wird zu **einem** Wallet-Betrag — und davon kauft man eine Karte
@@ -51,8 +51,9 @@ Instrumente). Beim An- und Abmelden wird es in `state.accounts[].ledger` ein- un
 ausgelagert (`stashLedger` / `loadLedger` in `app.js`).
 
 Neue Konten stehen auf `review: 'pending'`. Bei der Registrierung wird das nicht erwähnt —
-der Hinweis erscheint erst dort, wo er zählt: auf der Auszahlungsseite. In diesem Zustand
-funktionieren Einlösen und Kartenkauf normal, nur die Auszahlung ist gesperrt — mit der Begründung, dass jede
+der Hinweis erscheint erst dort, wo er zählt: auf dem Marktplatz und der Auszahlungsseite.
+In diesem Zustand funktioniert nur das Einlösen von Codes; Kartenkauf und Auszahlung sind
+gesperrt — mit der Begründung, dass jede
 Registrierung von Hand gegen Bots und KI-Agenten geprüft wird und das 4 bis 5 Werktage
 dauert. Das erwartete Datum wird aus dem Registrierungszeitpunkt berechnet, Wochenenden
 werden übersprungen (`addWorkingDays` / `reviewWindow`). Die Fristen stehen als
@@ -61,6 +62,10 @@ werden übersprungen (`addWorkingDays` / `reviewWindow`). Die Fristen stehen als
 Es gibt keinen Freischalt-Mechanismus: `pending` bleibt bestehen, weil ohne Backend
 niemand prüfen kann. Wer den Status zum Testen ändern will, setzt `review` auf `'verified'`
 im jeweiligen Eintrag in `state.accounts`.
+
+Der Speicherschlüssel heißt `vaultcards.state.v1`. Beim ersten Laden nach dem Rebranding
+wird ein vorhandener Stand aus `vaultly.state.v1` übernommen; Codes mit dem alten Präfix
+`VLT-` bleiben einlösbar (`CODE_PREFIXES` in `app.js`), neue tragen `VC-`.
 
 Passwörter werden nicht im Klartext gespeichert, sondern als einfacher Hash (`hashPass`).
 Das ist **kein** Sicherheitsmerkmal — bei einer statischen Seite liegt alles im Browser des
@@ -116,4 +121,4 @@ Kaufdialog und bei den gehaltenen Instrumenten.
 ## Markennamen
 
 Die Markennamen im Katalog machen den Marktplatz als Demo lesbar. Es werden keine Logos
-nachgebildet, und Vaultly steht in keiner Verbindung zu diesen Unternehmen.
+nachgebildet, und VaultCards steht in keiner Verbindung zu diesen Unternehmen.
