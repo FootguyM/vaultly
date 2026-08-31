@@ -1012,7 +1012,7 @@
     view.classList.remove('view-enter');
     void view.offsetWidth;          /* restart the animation on every route */
     view.classList.add('view-enter');
-    $$('#nav a').forEach(function (a) {
+    $$('#nav a, #tabbar a').forEach(function (a) {
       a.classList.toggle('active', a.dataset.route === (r.name || 'shop'));
     });
     $('#nav').classList.remove('open');

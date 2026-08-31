@@ -107,6 +107,15 @@ Kaufdialog und bei den gehaltenen Instrumenten.
 - **Schriften:** Archivo für alles Gesetzte, IBM Plex Mono für Zahlen, Codes und Labels.
   Bewusst keine Display-Serife und kein cremefarbener Grund.
 - **Maße:** 14px Basis, 3px Radien, kompakte Zeilenhöhen.
+
+### Mobil (bis 760px)
+
+Die dichte Desktop-Ansicht wird auf dem Handy bewusst weicher: 15px Basis, 6px Radien,
+mehr Abstand. Die Navigation liegt als feste Tab-Leiste am unteren Rand (daumenerreichbar,
+`env(safe-area-inset-bottom)` berücksichtigt) statt hinter einem Hamburger-Menü. Alle
+Tap-Ziele sind mindestens 42px hoch, Eingabefelder 16px groß (darunter zoomt iOS beim
+Fokussieren). Marktplatz-Zeilen laufen zweizeilig, Dialoge erscheinen als Bottom-Sheet mit
+angehefteter Hauptaktion.
 - **Guthaben:** das einzige gefüllte Element im Header, damit der Blick zuerst dort landet.
   Der Avatar daneben bleibt bewusst nur umrandet. Im Kaufdialog steht neben dem Guthaben,
   was nach dem Kauf übrig bleibt.

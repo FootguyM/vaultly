@@ -155,7 +155,12 @@ svg{fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stro
 .btn-block{width:100%}
 .btn-lg{padding:10px 18px; font-size:13.5px}
 .btn-sm{padding:5px 10px; font-size:12px}
-.btn[disabled]{opacity:.4; cursor:not-allowed}
+/* Opaque rather than faded: a pinned button has page content scrolling
+   underneath it, and a translucent one lets that content show through. */
+.btn[disabled]{
+  cursor:not-allowed; background:var(--bg-3); border-color:var(--line); color:var(--ink-3);
+}
+.btn[disabled]:hover{opacity:1}
 
 .field{display:flex; flex-direction:column; gap:5px}
 .field label{font-size:11.5px; font-weight:600; color:var(--ink-2)}
@@ -189,6 +194,7 @@ svg{fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stro
    under prefers-reduced-motion at the bottom of this file.            */
 @keyframes rise{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
 @keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes sheet{from{opacity:0; transform:translateY(22px)}to{opacity:1; transform:none}}
 @keyframes pulse{
   0%{transform:scale(1)}
   35%{transform:scale(1.045)}
@@ -200,6 +206,11 @@ svg{fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stro
 .balance-pill.pulse{animation:pulse .42s cubic-bezier(.3,1.4,.5,1)}
 .btn:active,.chip:active,.amt:active,.step-btn:active,.market-row:active{transform:translateY(1px)}
 .btn,.chip,.amt,.step-btn,.market-row,.icon-btn,.method{transition:background .12s, color .12s, border-color .12s, opacity .12s, transform .06s}
+
+/* ---------------------------------------------------- tab bar
+   Phones get the five sections as a thumb-reachable bar instead of a
+   hamburger; it is hidden entirely from the tablet breakpoint up.     */
+.tabbar{display:none}
 
 /* ---------------------------------------------------- surfaces */
 .card{background:var(--bg); border:1px solid var(--line); border-radius:var(--r)}
@@ -576,22 +587,116 @@ svg{fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stro
   .cols-2{grid-template-columns:1fr; gap:22px}
 }
 @media (max-width:760px){
-  .nav{
-    position:absolute; top:calc(var(--head) + 1px); left:0; right:0; display:none;
-    flex-direction:column; align-items:stretch; gap:0; padding:6px 20px 12px;
-    background:var(--bg); border-bottom:1px solid var(--line);
-  }
-  .nav.open{display:flex}
-  .nav a{padding:9px 0; border-radius:0; border-bottom:1px solid var(--line)}
-  .nav a.active{background:transparent}
-  .menu-btn{display:grid}
-  .balance-pill .balance-label{display:none}
+  /* ---- friendlier proportions: bigger text, softer corners, more air ---- */
+  :root{--r:6px; --head:56px}
+  body{font-size:15px; line-height:1.55}
+  .shell{padding-inline:16px}
+  .section{padding:20px 0}
+  h1{font-size:clamp(27px,7.4vw,34px)}
+  h2{font-size:20px}
+  .card-pad{padding:16px}
+
+  /* the header keeps only identity and the balance; sections move below */
+  .nav, .menu-btn{display:none !important}
   .hide-sm{display:none}
-  .hero-trust div{padding-right:16px; margin-right:16px}
+  .balance-pill{padding:6px 12px}
+  .balance-value{font-size:16px}
+  .icon-btn{width:42px; height:42px}
+  .icon-btn svg{width:18px; height:18px}
+  .avatar{width:42px; height:42px; font-size:12.5px}
+  .header-actions{gap:8px}
+
+  /* ---- the tab bar ---- */
+  .tabbar{
+    display:grid; grid-template-columns:repeat(5,1fr);
+    position:fixed; left:0; right:0; bottom:0; z-index:60;
+    background:var(--bg); border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom,0);
+  }
+  .tabbar a{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    padding:9px 2px 8px; min-height:56px; color:var(--ink-3); font-size:10.5px; font-weight:600;
+    -webkit-tap-highlight-color:transparent; transition:color .12s;
+  }
+  .tabbar a svg{width:21px; height:21px; stroke-width:1.6}
+  .tabbar a.active{color:var(--accent)}
+  .tabbar a:active{background:var(--bg-3)}
+  body{padding-bottom:calc(56px + env(safe-area-inset-bottom,0))}
+  #view{min-height:calc(100vh - var(--head) - 56px)}
+  .toasts{left:12px; right:12px; bottom:calc(64px + env(safe-area-inset-bottom,0))}
+  .toast{max-width:none}
+
+  /* ---- comfortable targets ---- */
+  .btn{padding:11px 16px; font-size:14px}
+  .btn-lg{padding:14px 20px; font-size:15px}
+  .btn-sm{padding:8px 12px; font-size:13px}
+  .input,.select{padding:11px 12px; font-size:16px}   /* 16px stops iOS zooming on focus */
+  .field label{font-size:12.5px}
+  .chip{padding:11px 15px; font-size:13px; background:var(--bg-2); border-radius:99px}
+  .chip.active{background:var(--ink)}
+  .chips{gap:6px}
+  .pw-toggle{width:42px}
+  .step-btn{width:52px; font-size:18px}
+  .stepper-input{font-size:16px; padding-block:12px}
+  .amt{padding:13px 4px; font-size:14px}
+
+  /* ---- the marketplace row gets two lines and room to be tapped ---- */
+  .market{grid-template-columns:1fr}
+  .market-row{
+    grid-template-columns:22px 1fr auto; grid-template-areas:"s n r" ". c r";
+    gap:2px 12px; padding:12px 4px; align-items:center;
+  }
+  .swatch{grid-area:s; width:20px; height:20px; border-radius:5px}
+  .mr-name{grid-area:n; font-size:15px}
+  .mr-cat{grid-area:c; font-size:11.5px}
+  .mr-range{grid-area:r; font-size:12.5px; text-align:right}
+
+  /* ---- stacking that was cramped on one line ---- */
+  .section-head{align-items:flex-start; flex-direction:column; gap:10px}
+  /* the decorative badge goes; a status badge like "locked" stays */
+  .section-head .pill-accent{display:none}
+  .toolbar{flex-direction:column; align-items:stretch; gap:12px}
+  .search .input{font-size:16px; padding-block:9px}
+  .hero{padding:22px 0 4px}
+  .hero-trust div{padding-right:14px; margin-right:14px}
+  .statement-head{padding:16px}
+  .wallet-actions .btn{flex:1}
+  .stat{border-right:0; border-bottom:1px solid var(--line)}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .stat:nth-child(odd){border-right:1px solid var(--line)}
   .method{border-right:0; border-bottom:1px solid var(--line)}
   .method:last-child{border-bottom:0}
-  .toasts{left:14px; right:14px; bottom:14px}
-  .toast{max-width:none}
+  .method{padding:13px 14px}
+  .owned{grid-template-columns:1fr 1fr; gap:12px}
+  /* Dialogs become bottom sheets: they arrive from the thumb end of the
+     screen and the confirming button sits within reach. */
+  .overlay{align-items:end; padding:0}
+  .modal{
+    max-width:none; max-height:86vh; border-radius:12px 12px 0 0;
+    border-bottom:0; animation:sheet .24s cubic-bezier(.22,.7,.3,1) both;
+  }
+  .modal-head{padding:14px 16px; position:sticky; top:0; background:var(--bg); z-index:1}
+  .modal-head::before{
+    content:""; position:absolute; top:6px; left:50%; transform:translateX(-50%);
+    width:34px; height:4px; border-radius:2px; background:var(--line-2);
+  }
+  .modal-body{padding:14px 16px calc(14px + env(safe-area-inset-bottom,0))}
+  /* the confirming action stays pinned to the thumb end while the sheet
+     scrolls beneath it, so it is never hunted for */
+  .modal-body > .btn-lg.btn-block:last-child,
+  .modal-body > a.btn-lg.btn-block:last-child{
+    position:sticky; bottom:0; margin-top:14px;
+    box-shadow:0 -14px 14px -8px var(--bg), 0 -1px 0 var(--line);
+  }
+  /* a shorter plate keeps the action above the fold */
+  .modal .gc{aspect-ratio:2.15}
+  .modal .gc-brand{font-size:16px}
+  .amount-grid{grid-template-columns:repeat(3,1fr)}
+  .amt{border-bottom:1px solid var(--line-2)}
+  .amt:nth-child(3n){border-right:0}
+  .code-input{font-size:18px; padding:16px 10px; letter-spacing:.12em}
+  .footer-inner{gap:26px; padding-top:22px}
+  .footer-cols{gap:30px}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms !important; transition-duration:.01ms !important}
