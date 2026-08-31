@@ -38,9 +38,9 @@ python3 -m http.server 8080   # danach http://localhost:8080 öffnen
 | Marktplatz | `#/shop` | 20+ Marken aus Shopping, Gaming, Streaming, Apps, Payments, Krypto und Travel. Suche und Kategoriefilter. Ein Kauf bucht vom Ledger ab und stellt sofort einen Code aus. |
 | Einlösen | `#/redeem` | Gift-Code eingeben, Betrag wird auf den Ledger gebucht. Jeder Code gilt genau einmal. |
 | Ledger | `#/wallet` | Kontoauszug: Guthaben, Kennzahlen, gehaltene Instrumente mit kopierbaren Codes, Journal. Nur mit Login. |
-| Auszahlung | `#/payout` | Bank, PayPal, Krypto oder Debitkarte. Immer blockiert: **Support muss das Konto verifizieren, bevor ausgezahlt wird.** Erzeugt ein Ticket und zeigt den Verifizierungs-Status. |
+| Auszahlung | `#/payout` | Cash App, PayPal oder Krypto. Immer blockiert: **Support muss das Konto verifizieren, bevor ausgezahlt wird.** Erzeugt ein Ticket und zeigt den Verifizierungs-Status. |
 | Konzept | `#/about` | Die Idee dahinter, Vertrauensargumente und FAQ. |
-| Registrierung | `#/register` | E-Mail und Passwort (min. 8 Zeichen), mit Auge-Symbol zum Einblenden. Der Anzeigename ist automatisch der Teil vor dem `@`. Legt ein Konto mit Status `pending` an und schreibt das Startguthaben gut. |
+| Registrierung | `#/register` | E-Mail und Passwort (min. 8 Zeichen), mit Auge-Symbol zum Einblenden. Der Anzeigename ist automatisch der Teil vor dem `@`. Legt ein Konto mit Status `pending` und leerem Ledger an. |
 | Login | `#/login` | Prüft E-Mail gegen die registrierten Konten. Unbekannte Adressen werden zur Registrierung geleitet. Der Benutzername `admin` verlangt das Admin-Passwort. |
 | Ausgabe-Konsole | `#/console` | Nur für Administratoren. Erzeugt einzeln gültige Gift-Codes mit beliebigem Wert, listet alle ausgegebenen Codes mit Status. Auch über den privaten Link `#/console/vt-9f2k-console` erreichbar. |
 
@@ -102,6 +102,9 @@ Kaufdialog und bei den gehaltenen Instrumenten.
 - **Schriften:** Archivo für alles Gesetzte, IBM Plex Mono für Zahlen, Codes und Labels.
   Bewusst keine Display-Serife und kein cremefarbener Grund.
 - **Maße:** 14px Basis, 3px Radien, kompakte Zeilenhöhen.
+- **Guthaben:** das einzige gefüllte Element im Header, damit der Blick zuerst dort landet.
+  Der Avatar daneben bleibt bewusst nur umrandet. Im Kaufdialog steht neben dem Guthaben,
+  was nach dem Kauf übrig bleibt.
 
 ## Dateien
 

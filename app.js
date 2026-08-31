@@ -44,7 +44,6 @@
   var STEP = 5;
   var MIN_AMOUNT = 5;
   var MIN_PAYOUT = 5;
-  var WELCOME_CREDIT = 25;
   var REVIEW_DAYS_MIN = 4;
   var REVIEW_DAYS_MAX = 5;
   function ceilingFor(b) { return b.max; }
@@ -59,10 +58,9 @@
   }
 
   var METHODS = [
-    { id:'sepa',   name:'Bank transfer',  sub:'SEPA / IBAN · 1–2 days',  field:'IBAN',           ph:'DE00 0000 0000 0000 0000 00' },
-    { id:'paypal', name:'PayPal',         sub:'Instant · 2% fee',        field:'PayPal email',   ph:'you@example.com' },
-    { id:'crypto', name:'Crypto payout',  sub:'USDT / BTC · ~10 min',    field:'Wallet address', ph:'0x… or bc1…' },
-    { id:'card',   name:'Debit card',     sub:'Visa / Mastercard · 24h', field:'Card number',    ph:'0000 0000 0000 0000' }
+    { id:'cashapp', name:'Cash App',      sub:'Instant · $Cashtag',      field:'$Cashtag',       ph:'$yourcashtag' },
+    { id:'paypal',  name:'PayPal',        sub:'Instant · 2% fee',        field:'PayPal email',   ph:'you@example.com' },
+    { id:'crypto',  name:'Crypto payout', sub:'USDT / BTC · ~10 min',    field:'Wallet address', ph:'0x… or bc1…' }
   ];
 
   /* ------------------------------------------------------------------ state */
@@ -322,8 +320,6 @@
     state.user = sessionFrom(acc);
     loadLedger(acc);
 
-    state.balance += WELCOME_CREDIT;
-    state.txns.unshift(tx('in', 'Welcome credit', 'Credited on registration', WELCOME_CREDIT));
     stashLedger();
     save();
     renderChrome();
@@ -541,8 +537,9 @@
         '</div>' +
         '<p class="tiny muted" style="margin-top:7px">' + money(MIN_AMOUNT) + ' to ' + money(top) + '</p>' +
       '</div>' +
-      '<div class="spread" style="padding:9px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)">' +
-        '<span class="caps">Ledger balance</span><span class="mono" style="font-size:13px">' + money(state.balance) + '</span></div>' +
+      '<div class="buy-balance">' +
+        '<span class="caps">Ledger balance</span>' +
+        '<span class="mono buy-balance-figure" id="buyBalance"></span></div>' +
       '<div id="buyWarn"></div>' +
       '<button class="btn btn-primary btn-block btn-lg" style="margin-top:16px" data-act="confirm-buy">' +
         'Draw for ' + money(pick) + '</button>'
@@ -566,6 +563,13 @@
 
     var input = $('#amtInput');
     if (input && !keepInput) input.value = val;
+
+    var bal = $('#buyBalance');
+    if (bal) {
+      bal.innerHTML = val <= state.balance
+        ? money(state.balance) + ' <span class="buy-after">\u2192 ' + money(state.balance - val) + '</span>'
+        : money(state.balance);
+    }
 
     var btn = $('[data-act="confirm-buy"]');
     if (!btn) return;
@@ -619,7 +623,10 @@
             '<div class="caps">Available balance</div>' +
             '<div class="statement-amount">' + money(state.balance) + '</div>' +
             '<div class="statement-meta">' + esc(state.user.email) + ' · opened ' +
-              new Date(state.user.since).toLocaleDateString() + '</div>' +
+              new Date(state.user.since).toLocaleDateString(LOCALE) + '</div>' +
+            (state.balance === 0
+              ? '<div class="statement-hint">Present a gift code to credit your ledger.</div>'
+              : '') +
             '<div class="wallet-actions">' +
               '<a class="btn btn-white" href="#/redeem" data-link>Add funds</a>' +
               '<a class="btn" href="#/shop" data-link>Draw a card</a>' +
@@ -688,7 +695,7 @@
   }
 
   /* -------------------------------------------------------------- payout */
-  var payoutMethod = 'sepa';
+  var payoutMethod = 'cashapp';
 
   function viewPayout() {
     var m = METHODS.filter(function (x) { return x.id === payoutMethod; })[0];
@@ -1116,8 +1123,9 @@
         queueModal('Account open', '' +
           '<div class="notice notice-ok">' + ICON.check +
             '<div><div class="notice-title">Welcome, ' + esc(state.user.name) + '</div>' +
-            '<div class="notice-body">' + money(WELCOME_CREDIT) + ' welcome credit is on your ledger. ' +
-            'Present a code or draw a card whenever you like.</div></div></div>' +
+            '<div class="notice-body">Your ledger is open and empty. Present a gift code to credit it, ' +
+            'then draw a card on any brand in the marketplace.</div></div></div>' +
+          '<a class="btn btn-ghost btn-block" style="margin-top:12px" href="#/redeem" data-link data-act="close-modal">Present a code</a>' +
           '<button class="btn btn-primary btn-block btn-lg" style="margin-top:18px" data-act="close-modal">Open the ledger</button>');
         go('#/wallet');
         break;

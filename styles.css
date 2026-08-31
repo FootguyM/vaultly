@@ -117,18 +117,24 @@ svg{fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stro
   :root:not([data-theme="light"]) .i-moon{display:block}
 }
 .menu-btn{display:none}
+/* The balance is the one filled element in the header, so the eye lands on it
+   first; the avatar beside it stays outlined to keep that unambiguous. */
 .balance-pill{
-  display:flex; align-items:baseline; gap:8px; padding:4px 9px;
-  border:1px solid var(--line); border-radius:var(--r); background:var(--bg-2);
+  display:flex; align-items:baseline; gap:9px; padding:5px 11px;
+  border:1px solid var(--ink); border-radius:var(--r); background:var(--ink);
 }
-.balance-pill:hover{border-color:var(--line-3)}
-.balance-label{font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3); font-weight:600}
-.balance-value{font-family:var(--mono); font-weight:500; font-size:12.5px}
+.balance-pill:hover{opacity:.88}
+.balance-label{
+  font-size:9.5px; text-transform:uppercase; letter-spacing:.06em;
+  color:var(--bg); opacity:.55; font-weight:600;
+}
+.balance-value{font-family:var(--mono); font-weight:600; font-size:15px; color:var(--bg); letter-spacing:-.01em}
 .avatar{
   width:28px; height:28px; display:grid; place-items:center; cursor:pointer;
-  background:var(--ink); color:var(--bg); border:0; border-radius:var(--r);
+  background:transparent; color:var(--ink-2); border:1px solid var(--line-2); border-radius:var(--r);
   font-family:var(--mono); font-size:10.5px; font-weight:600;
 }
+.avatar:hover{border-color:var(--ink); color:var(--ink)}
 
 /* -------------------------------------------- buttons, inputs */
 .btn{
@@ -296,7 +302,8 @@ svg{fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stro
 .statement-head .caps{color:rgba(255,255,255,.55)}
 :root[data-theme="dark"] .statement-head{background:var(--bg-2); color:var(--ink); border-bottom:1px solid var(--line)}
 :root[data-theme="dark"] .statement-head .caps{color:var(--ink-3)}
-.statement-amount{font-family:var(--mono); font-size:clamp(26px,4vw,34px); font-weight:500; letter-spacing:-.03em; line-height:1.1; margin-top:3px}
+.statement-amount{font-family:var(--mono); font-size:clamp(30px,4.6vw,42px); font-weight:600; letter-spacing:-.035em; line-height:1.05; margin-top:4px}
+.statement-hint{font-size:12px; margin-top:8px; opacity:.72}
 .statement-meta{font-family:var(--mono); font-size:11px; opacity:.6; margin-top:5px}
 .statement-body{padding:0}
 .wallet-actions{display:flex; gap:7px; flex-wrap:wrap; margin-top:14px}
@@ -454,6 +461,14 @@ svg{fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stro
 .modal-body{padding:16px 15px}
 .modal-x{background:none; border:0; cursor:pointer; color:var(--ink-3); font-size:17px; line-height:1; padding:0 3px}
 .modal-x:hover{color:var(--ink)}
+
+.buy-balance{
+  display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  padding:9px 11px; margin-top:2px; background:var(--bg-2);
+  border:1px solid var(--line); border-radius:var(--r);
+}
+.buy-balance-figure{font-size:13.5px; font-weight:600}
+.buy-after{color:var(--ink-3); font-weight:400}
 
 .amount-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(64px,1fr)); border:1px solid var(--line-2); border-radius:var(--r); overflow:hidden}
 .amt{
