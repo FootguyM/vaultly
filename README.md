@@ -40,7 +40,7 @@ python3 -m http.server 8080   # danach http://localhost:8080 öffnen
 | Ledger | `#/wallet` | Kontoauszug: Guthaben, Kennzahlen, gehaltene Instrumente mit kopierbaren Codes, Journal. Nur mit Login. |
 | Auszahlung | `#/payout` | Bank, PayPal, Krypto oder Debitkarte. Immer blockiert: **Support muss das Konto verifizieren, bevor ausgezahlt wird.** Erzeugt ein Ticket und zeigt den Verifizierungs-Status. |
 | Konzept | `#/about` | Die Idee dahinter, Vertrauensargumente und FAQ. |
-| Registrierung | `#/register` | Name, E-Mail, Passwort (min. 8 Zeichen), Wiederholung und Bestätigung des Prüfhinweises. Legt ein Konto mit Status `pending` an und schreibt das Startguthaben gut. |
+| Registrierung | `#/register` | E-Mail und Passwort (min. 8 Zeichen), mit Auge-Symbol zum Einblenden. Der Anzeigename ist automatisch der Teil vor dem `@`. Legt ein Konto mit Status `pending` an und schreibt das Startguthaben gut. |
 | Login | `#/login` | Prüft E-Mail gegen die registrierten Konten. Unbekannte Adressen werden zur Registrierung geleitet. Der Benutzername `admin` verlangt das Admin-Passwort. |
 | Ausgabe-Konsole | `#/console` | Nur für Administratoren. Erzeugt einzeln gültige Gift-Codes mit beliebigem Wert, listet alle ausgegebenen Codes mit Status. Auch über den privaten Link `#/console/vt-9f2k-console` erreichbar. |
 
@@ -50,8 +50,9 @@ Jedes registrierte Konto führt sein **eigenes** Ledger (Guthaben, Journal, geha
 Instrumente). Beim An- und Abmelden wird es in `state.accounts[].ledger` ein- und
 ausgelagert (`stashLedger` / `loadLedger` in `app.js`).
 
-Neue Konten stehen auf `review: 'pending'`. In diesem Zustand funktionieren Einlösen und
-Kartenkauf normal, nur die Auszahlung ist gesperrt — mit der Begründung, dass jede
+Neue Konten stehen auf `review: 'pending'`. Bei der Registrierung wird das nicht erwähnt —
+der Hinweis erscheint erst dort, wo er zählt: auf der Auszahlungsseite. In diesem Zustand
+funktionieren Einlösen und Kartenkauf normal, nur die Auszahlung ist gesperrt — mit der Begründung, dass jede
 Registrierung von Hand gegen Bots und KI-Agenten geprüft wird und das 4 bis 5 Werktage
 dauert. Das erwartete Datum wird aus dem Registrierungszeitpunkt berechnet, Wochenenden
 werden übersprungen (`addWorkingDays` / `reviewWindow`). Die Fristen stehen als
@@ -90,15 +91,17 @@ Die Zahlen selbst werden nicht umgerechnet: 5 ist 5, in welcher Währung auch im
 
 ## Gestaltung
 
-Der Stil zitiert gedruckte Wertdokumente — Tickets, Vouchers, Banknoten —, weil eine
-Geschenkkarte genau das ist: ein Inhaberpapier. Umgesetzt mit Haarlinien statt Schatten,
-3px-Radien statt weicher Ecken, Guilloche-Gravur auf den Gutscheinen, Seriennummern in
-Tabellenziffern und einem aufgedrückten Stempel für gesperrte Auszahlungen.
+Nüchternes, dichtes Handelsinterface statt Marketing-Seite: Struktur entsteht aus
+Ausrichtung und Haarlinien, nicht aus Kacheln, Verläufen oder Schatten. Der Marktplatz ist
+eine Liste, keine Kachelwand; Beträge, Codes und Kennzahlen laufen durchgehend in
+Tabellenziffern. Die Gutscheingrafik erscheint nur dort, wo sie etwas zeigt — im Hero, im
+Kaufdialog und bei den gehaltenen Instrumenten.
 
-- **Farben:** Papier `#f2f3ef`, Tinte `#171c18`, Tiefdruck-Grün `#1f5c3d`, Stempel-Oxblood
-  `#a32e22`, Messing `#836829`. Neutraltöne mit Grünstich.
-- **Schriften:** Instrument Serif (Headlines), Archivo (Interface), IBM Plex Mono
-  (Seriennummern, Beträge, Kennzahlen).
+- **Farben:** Weiß bzw. `#0b0c0e` im Dark Mode, Tinte `#0c0e12`, eine einzige Signalfarbe
+  (Kobaltblau `#1b3fd8`) für Aktionen, Rot `#c22a20` ausschließlich für gesperrte Zustände.
+- **Schriften:** Archivo für alles Gesetzte, IBM Plex Mono für Zahlen, Codes und Labels.
+  Bewusst keine Display-Serife und kein cremefarbener Grund.
+- **Maße:** 14px Basis, 3px Radien, kompakte Zeilenhöhen.
 
 ## Dateien
 

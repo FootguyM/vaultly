@@ -191,6 +191,8 @@
     chat:   '<svg viewBox="0 0 24 24"><path d="M20 12a7 7 0 0 1-7 7H8l-4 3v-4.5A7 7 0 0 1 8 5h5a7 7 0 0 1 7 7Z"/></svg>',
     trash:  '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>',
     plus:   '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+    eye:    '<svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>',
+    eyeOff: '<svg viewBox="0 0 24 24"><path d="M9.9 5.8A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.8 3.6M6.3 7.9A16.7 16.7 0 0 0 2.5 12S6 18.5 12 18.5c1.2 0 2.3-.2 3.3-.6"/><path d="m10 10a2.8 2.8 0 0 0 4 4"/><path d="m3.5 3.5 17 17"/></svg>',
     key:    '<svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="4"/><path d="M12 12h9M17 12v3.5M20 12v2.5"/></svg>'
   };
 
@@ -304,12 +306,12 @@
     };
   }
 
-  function register(email, name, password) {
+  function register(email, password) {
     stashLedger();
     var acc = {
       id: uid(),
       email: email.trim(),
-      name: (name || email.split('@')[0]).trim(),
+      name: email.split('@')[0].trim(),   /* the local part is the display name */
       pass: hashPass(password),
       since: Date.now(),
       role: 'member',
@@ -441,7 +443,7 @@
     '<section class="hero"><div class="hero-grid">' +
       '<div>' +
         '<span class="eyebrow">Clearing house for stored value</span>' +
-        '<h1 style="margin-top:18px">Every gift card,<br>one ledger.</h1>' +
+        '<h1 style="margin-top:10px">Every gift card,<br>one ledger.</h1>' +
         '<p class="lede">A gift card is money locked to one shop. Vaultly accepts any card, voucher or prepaid balance, books it into a single ledger, and lets you draw a new card on any other brand — or cash the balance out.</p>' +
         '<div class="hero-cta">' +
           (state.user
@@ -475,7 +477,7 @@
         }).join('') + '</div>' +
       '</div>' +
 
-      '<div class="grid-brands" id="brandGrid">' + brandCards() + '</div>' +
+      '<div class="market" id="brandGrid">' + brandCards() + '</div>' +
     '</section>' +
 
     '<section class="section">' +
@@ -501,15 +503,15 @@
       return okCat && okQ;
     });
     if (!list.length) {
-      return '<div class="empty" style="grid-column:1/-1">No cards match “' + esc(shopFilter.q) + '”.<br>' +
+      return '<div class="empty" style="grid-column:1/-1;margin-top:16px">Nothing matches “' + esc(shopFilter.q) + '”.<br>' +
         '<button class="btn btn-ghost btn-sm" data-act="clear-filter" style="margin-top:12px">Clear filters</button></div>';
     }
     return list.map(function (b) {
-      var lo = MIN_AMOUNT, hi = ceilingFor(b);
-      return '<button class="brand-card" data-act="open-brand" data-id="' + b.id + '">' +
-        cardFace(b, 0, 'gc-sm') +
-        '<div class="brand-meta"><strong>' + esc(b.name) + '</strong>' +
-        '<span class="brand-range">' + money(lo) + '–' + money(hi) + '</span></div>' +
+      return '<button class="market-row" data-act="open-brand" data-id="' + b.id + '">' +
+        '<span class="swatch" style="--c-ink:' + b.ink + '"></span>' +
+        '<span class="mr-name">' + esc(b.name) + '</span>' +
+        '<span class="mr-cat">' + esc(b.cat) + '</span>' +
+        '<span class="mr-range">' + money(MIN_AMOUNT) + '–' + money(ceilingFor(b)) + '</span>' +
       '</button>';
     }).join('');
   }
@@ -583,7 +585,7 @@
     return '<section class="section redeem-wrap">' +
       '<div style="margin-bottom:26px">' +
         '<span class="eyebrow">Redeem</span>' +
-        '<h1 style="margin-top:16px">Present a code<br>for credit.</h1>' +
+        '<h1 style="margin-top:10px">Present a code for credit</h1>' +
         '<p class="lede">Any Vaultly code, in any denomination. The value is booked to your ledger immediately and can be drawn against any brand in the marketplace.</p>' +
       '</div>' +
       '<div class="card card-pad">' +
@@ -694,7 +696,7 @@
 
     return '<section class="section">' +
       '<div class="section-head"><div><span class="eyebrow">Payout</span>' +
-        '<h1 style="margin-top:16px">Draw the balance out</h1>' +
+        '<h1 style="margin-top:10px">Draw the balance out</h1>' +
         '<p>Settle your ledger balance to a bank account, PayPal, a crypto wallet or a debit card. Funds are released once the review of your registration is complete.</p></div></div>' +
 
       '<div class="notice notice-stamp stamped" style="margin-bottom:22px">' + ICON.lock +
@@ -760,7 +762,7 @@
     return '<section class="section">' +
       '<div style="max-width:70ch">' +
         '<span class="eyebrow">The concept</span>' +
-        '<h1 style="margin-top:18px">A gift card is money<br>with someone else\u2019s name on it.</h1>' +
+        '<h1 style="margin-top:10px">A gift card is money with someone else\u2019s name on it</h1>' +
         '<p class="lede">Get one for a shop you never use and it sits in a drawer until it expires. Vaultly is a clearing house: every card, voucher and prepaid balance is accepted, booked into one ledger, and reissued as whatever you actually want.</p>' +
       '</div>' +
 
@@ -813,45 +815,30 @@
   }
 
   /* --------------------------------------------------- register & sign in */
-  function reviewExplainer() {
-    return '<div class="notice notice-accent">' + ICON.shield +
-      '<div><div class="notice-title">Every registration is checked by hand</div>' +
-      '<div class="notice-body">Automated sign-ups — scripted bots and AI agents — are how ' +
-      'stored-value accounts get abused at scale. So we do not screen with a captcha and let the ' +
-      'rest through: a person reviews every new account before payouts are released. It takes ' +
-      REVIEW_DAYS_MIN + ' to ' + REVIEW_DAYS_MAX + ' working days. Redeeming codes and drawing ' +
-      'cards works immediately.</div></div></div>';
+  function pwField(id, label, autocomplete, placeholder) {
+    return '<div class="field"><label for="' + id + '">' + label + '</label>' +
+      '<div class="pw">' +
+        '<input id="' + id + '" class="input" type="password" autocomplete="' + autocomplete + '"' +
+          (placeholder ? ' placeholder="' + placeholder + '"' : '') + '>' +
+        '<button type="button" class="pw-toggle" data-act="toggle-pw" data-for="' + id + '" ' +
+          'aria-label="Show password" title="Show password">' + ICON.eye + '</button>' +
+      '</div></div>';
   }
 
   function viewRegister() {
-    return '<section class="auth-wrap auth-wide">' +
-      '<div style="margin-bottom:22px">' +
-        '<span class="eyebrow">Open an account</span>' +
-        '<h2 style="margin-top:12px">Join Vaultly</h2>' +
-        '<p class="small muted" style="margin-top:10px">One ledger for every gift card you hold.</p>' +
-      '</div>' +
-
+    return '<section class="auth-wrap">' +
       '<div class="card card-pad">' +
-        '<div class="field" style="margin-bottom:14px"><label for="rgName">Name</label>' +
-          '<input id="rgName" class="input" type="text" placeholder="Your name" autocomplete="name"></div>' +
+        '<div class="auth-head">' +
+          '<h2>Open an account</h2>' +
+          '<p class="small muted">One ledger for every gift card you hold.</p>' +
+        '</div>' +
         '<div class="field" style="margin-bottom:14px"><label for="rgEmail">Email</label>' +
           '<input id="rgEmail" class="input" type="email" placeholder="you@example.com" autocomplete="email"></div>' +
-        '<div class="field" style="margin-bottom:14px"><label for="rgPass">Password</label>' +
-          '<input id="rgPass" class="input" type="password" placeholder="At least 8 characters" autocomplete="new-password"></div>' +
-        '<div class="field" style="margin-bottom:16px"><label for="rgPass2">Repeat password</label>' +
-          '<input id="rgPass2" class="input" type="password" autocomplete="new-password"></div>' +
-
-        '<label class="check" for="rgAgree">' +
-          '<input type="checkbox" id="rgAgree">' +
-          '<span>I understand that new accounts are reviewed by hand and that payouts are held until the review is complete.</span>' +
-        '</label>' +
-
+        pwField('rgPass', 'Password', 'new-password', 'At least 8 characters') +
         '<button class="btn btn-primary btn-block btn-lg" style="margin-top:18px" data-act="do-register">Open account</button>' +
         '<p class="tiny muted center" style="margin-top:14px">Already registered? ' +
-          '<a href="#/login" data-link style="color:var(--green);font-weight:600">Sign in</a></p>' +
+          '<a href="#/login" data-link class="link">Sign in</a></p>' +
       '</div>' +
-
-      '<div style="margin-top:18px">' + reviewExplainer() + '</div>' +
     '</section>';
   }
 
@@ -865,9 +852,8 @@
         '</div>' +
         '<div class="field" style="margin-bottom:12px"><label for="liEmail">Email or username</label>' +
           '<input id="liEmail" class="input" type="text" placeholder="you@example.com" autocomplete="username"></div>' +
-        '<div class="field" style="margin-bottom:16px"><label for="liPass">Password</label>' +
-          '<input id="liPass" class="input" type="password" placeholder="••••••••" autocomplete="current-password"></div>' +
-        '<button class="btn btn-primary btn-block btn-lg" data-act="do-login">Continue</button>' +
+        pwField('liPass', 'Password', 'current-password') +
+        '<button class="btn btn-primary btn-block btn-lg" style="margin-top:18px" data-act="do-login">Continue</button>' +
         '<div class="divider"></div>' +
         '<a class="btn btn-ghost btn-block" href="#/register" data-link>Open a new account</a>' +
         '<p class="tiny muted center" style="margin-top:16px">Your session is kept on this device only.</p>' +
@@ -1117,34 +1103,22 @@
 
       case 'do-register': {
         var rEmail = $('#rgEmail').value.trim();
-        var rName = $('#rgName').value.trim();
         var rPass = $('#rgPass').value;
-        var rPass2 = $('#rgPass2').value;
-        var rAgree = $('#rgAgree').checked;
 
         if (!/^\S+@\S+\.\S+$/.test(rEmail)) { $('#rgEmail').focus(); toast('Enter a valid email address', null, 'err'); break; }
         if (rEmail.toLowerCase() === ADMIN_USER || findAccount(rEmail)) {
           $('#rgEmail').focus(); toast('That email already has an account', 'Sign in instead', 'err'); break;
         }
         if (rPass.length < 8) { $('#rgPass').focus(); toast('Use at least 8 characters', null, 'err'); break; }
-        if (rPass !== rPass2) { $('#rgPass2').focus(); toast('The passwords do not match', null, 'err'); break; }
-        if (!rAgree) { toast('Confirm the review notice to continue', null, 'err'); break; }
 
-        register(rEmail, rName, rPass);
+        register(rEmail, rPass);
         var win = reviewWindow();
-        queueModal('Application received', '' +
-          '<div class="notice notice-accent">' + ICON.check +
-            '<div><div class="notice-title">Your account is open</div>' +
-            '<div class="notice-body">You can present codes and draw cards straight away. ' +
-            'Payouts unlock once the review is complete.</div></div></div>' +
-          '<div class="tracker" style="margin-top:18px">' +
-            tstep('done', ICON.check, 'Registration received', new Date(state.user.since).toLocaleDateString(LOCALE)) +
-            tstep('now', '!', 'Manual review', 'Expected ' + win.from + ' – ' + win.to) +
-            tstep('', '3', 'Payouts released', 'Once the review clears') +
-          '</div>' +
-          '<div class="code-row" style="margin-top:16px"><span class="small muted">Reference</span>' +
-            '<span class="mono grow" style="text-align:right">' + esc(refFor(state.user)) + '</span></div>' +
-          '<button class="btn btn-primary btn-block btn-lg" style="margin-top:16px" data-act="close-modal">Open the ledger</button>');
+        queueModal('Account open', '' +
+          '<div class="notice notice-ok">' + ICON.check +
+            '<div><div class="notice-title">Welcome, ' + esc(state.user.name) + '</div>' +
+            '<div class="notice-body">' + money(WELCOME_CREDIT) + ' welcome credit is on your ledger. ' +
+            'Present a code or draw a card whenever you like.</div></div></div>' +
+          '<button class="btn btn-primary btn-block btn-lg" style="margin-top:18px" data-act="close-modal">Open the ledger</button>');
         go('#/wallet');
         break;
       }
@@ -1238,6 +1212,17 @@
         var key = $('#consoleKey').value.trim();
         if (key !== CONSOLE_KEY) { toast('Wrong console key', null, 'err'); break; }
         closeModal(); go('#/console/' + CONSOLE_KEY);
+        break;
+      }
+
+      case 'toggle-pw': {
+        var pw = $('#' + el.dataset.for);
+        if (!pw) break;
+        var showing = pw.type === 'text';
+        pw.type = showing ? 'password' : 'text';
+        el.innerHTML = showing ? ICON.eye : ICON.eyeOff;
+        el.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+        el.setAttribute('title', showing ? 'Show password' : 'Hide password');
         break;
       }
 
