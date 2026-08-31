@@ -40,8 +40,30 @@ python3 -m http.server 8080   # danach http://localhost:8080 öffnen
 | Ledger | `#/wallet` | Kontoauszug: Guthaben, Kennzahlen, gehaltene Instrumente mit kopierbaren Codes, Journal. Nur mit Login. |
 | Auszahlung | `#/payout` | Bank, PayPal, Krypto oder Debitkarte. Immer blockiert: **Support muss das Konto verifizieren, bevor ausgezahlt wird.** Erzeugt ein Ticket und zeigt den Verifizierungs-Status. |
 | Konzept | `#/about` | Die Idee dahinter, Vertrauensargumente und FAQ. |
-| Login | `#/login` | E-Mail plus beliebiges Passwort legt sofort ein Mitgliedskonto an. Der Benutzername `admin` verlangt das Admin-Passwort. |
+| Registrierung | `#/register` | Name, E-Mail, Passwort (min. 8 Zeichen), Wiederholung und Bestätigung des Prüfhinweises. Legt ein Konto mit Status `pending` an und schreibt das Startguthaben gut. |
+| Login | `#/login` | Prüft E-Mail gegen die registrierten Konten. Unbekannte Adressen werden zur Registrierung geleitet. Der Benutzername `admin` verlangt das Admin-Passwort. |
 | Ausgabe-Konsole | `#/console` | Nur für Administratoren. Erzeugt einzeln gültige Gift-Codes mit beliebigem Wert, listet alle ausgegebenen Codes mit Status. Auch über den privaten Link `#/console/vt-9f2k-console` erreichbar. |
+
+## Konten und Verifizierung
+
+Jedes registrierte Konto führt sein **eigenes** Ledger (Guthaben, Journal, gehaltene
+Instrumente). Beim An- und Abmelden wird es in `state.accounts[].ledger` ein- und
+ausgelagert (`stashLedger` / `loadLedger` in `app.js`).
+
+Neue Konten stehen auf `review: 'pending'`. In diesem Zustand funktionieren Einlösen und
+Kartenkauf normal, nur die Auszahlung ist gesperrt — mit der Begründung, dass jede
+Registrierung von Hand gegen Bots und KI-Agenten geprüft wird und das 4 bis 5 Werktage
+dauert. Das erwartete Datum wird aus dem Registrierungszeitpunkt berechnet, Wochenenden
+werden übersprungen (`addWorkingDays` / `reviewWindow`). Die Fristen stehen als
+`REVIEW_DAYS_MIN` / `REVIEW_DAYS_MAX` oben in `app.js`.
+
+Es gibt keinen Freischalt-Mechanismus: `pending` bleibt bestehen, weil ohne Backend
+niemand prüfen kann. Wer den Status zum Testen ändern will, setzt `review` auf `'verified'`
+im jeweiligen Eintrag in `state.accounts`.
+
+Passwörter werden nicht im Klartext gespeichert, sondern als einfacher Hash (`hashPass`).
+Das ist **kein** Sicherheitsmerkmal — bei einer statischen Seite liegt alles im Browser des
+Besuchers; es hält lediglich Klartext-Passwörter aus dem `localStorage` heraus.
 
 ## Administrator
 

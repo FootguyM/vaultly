@@ -44,6 +44,9 @@
   var STEP = 5;
   var MIN_AMOUNT = 5;
   var MIN_PAYOUT = 5;
+  var WELCOME_CREDIT = 25;
+  var REVIEW_DAYS_MIN = 4;
+  var REVIEW_DAYS_MAX = 5;
   function ceilingFor(b) { return b.max; }
   function quickPicks(b) {
     var top = ceilingFor(b);
@@ -64,11 +67,12 @@
 
   /* ------------------------------------------------------------------ state */
   var DEFAULTS = {
-    user: null,
-    balance: 0,
+    user: null,      /* the signed-in session */
+    accounts: [],    /* registered accounts, each carrying its own ledger */
+    balance: 0,      /* the active ledger — swapped in and out on sign-in */
     txns: [],
     owned: [],
-    codes: [],
+    codes: [],       /* issued instruments, shared across the installation */
     payouts: [],
     theme: null,
     seeded: false
@@ -206,6 +210,11 @@
   }
 
   /* ------------------------------------------------------------------ modal */
+  /* Queued by an action that also navigates: render() clears the modal root,
+     so the modal has to be opened by the render that follows, not before it. */
+  var pendingModal = null;
+  function queueModal(title, bodyHtml) { pendingModal = { title: title, body: bodyHtml }; }
+
   function openModal(title, bodyHtml) {
     closeModal();
     var root = $('#modalRoot');
@@ -246,31 +255,113 @@
   }
 
   function isAdmin() { return !!(state.user && state.user.role === 'admin'); }
+  function isPending() { return !!(state.user && state.user.role !== 'admin' && state.user.review === 'pending'); }
 
-  function signIn(email, name, role) {
-    var handle = (name || email.split('@')[0] || 'member').trim();
-    state.user = {
-      id: uid(),
-      email: email.trim(),
+  /* Not a security measure — a static site cannot keep a secret. It only keeps
+     plain passwords out of localStorage. */
+  function hashPass(s) {
+    var h = 5381;
+    for (var i = 0; i < String(s).length; i++) h = ((h * 33) ^ String(s).charCodeAt(i)) >>> 0;
+    return h.toString(36);
+  }
+
+  function refFor(u) { return 'VR-' + String(u.id).toUpperCase().slice(0, 6); }
+
+  function findAccount(email) {
+    var want = String(email).trim().toLowerCase();
+    for (var i = 0; i < state.accounts.length; i++) {
+      if (state.accounts[i].email.toLowerCase() === want) return state.accounts[i];
+    }
+    return null;
+  }
+
+  /* Each account keeps its own balance, journal and instruments. The active one
+     lives at the top of state so the rest of the app can read it directly; these
+     two move it in and out on sign-in and sign-out. */
+  function stashLedger() {
+    if (!state.user || state.user.role === 'admin') return;
+    var acc = findAccount(state.user.email);
+    if (!acc) return;
+    acc.ledger = { balance: state.balance, txns: state.txns, owned: state.owned };
+  }
+  function loadLedger(acc) {
+    var l = (acc && acc.ledger) || { balance: 0, txns: [], owned: [] };
+    state.balance = l.balance || 0;
+    state.txns = l.txns || [];
+    state.owned = l.owned || [];
+  }
+
+  function sessionFrom(acc, role) {
+    var handle = acc.name || acc.email.split('@')[0];
+    return {
+      id: acc.id,
+      email: acc.email,
       name: handle,
       initials: handle.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || 'VL',
-      since: Date.now(),
-      role: role || 'member',
-      verified: false
+      since: acc.since,
+      role: role || acc.role || 'member',
+      review: acc.review || 'pending'
     };
-    if (!state.seeded) {
-      state.seeded = true;
-      state.balance += 25;
-      state.txns.unshift(tx('in', 'Welcome credit', 'Credited on sign-up', 25));
-      /* two codes so the issuing register is not empty on a fresh device */
-      state.codes.push(newCode(50, 'Welcome batch'), newCode(20, 'Welcome batch'));
-    }
+  }
+
+  function register(email, name, password) {
+    stashLedger();
+    var acc = {
+      id: uid(),
+      email: email.trim(),
+      name: (name || email.split('@')[0]).trim(),
+      pass: hashPass(password),
+      since: Date.now(),
+      role: 'member',
+      review: 'pending',           /* every registration is reviewed by hand */
+      ledger: { balance: 0, txns: [], owned: [] }
+    };
+    state.accounts.push(acc);
+    state.user = sessionFrom(acc);
+    loadLedger(acc);
+
+    state.balance += WELCOME_CREDIT;
+    state.txns.unshift(tx('in', 'Welcome credit', 'Credited on registration', WELCOME_CREDIT));
+    stashLedger();
+    save();
+    renderChrome();
+    return acc;
+  }
+
+  function signIn(acc, role) {
+    stashLedger();
+    state.user = sessionFrom(acc, role);
+    if (role === 'admin') { state.balance = 0; state.txns = []; state.owned = []; }
+    else loadLedger(acc);
     save();
     renderChrome();
   }
 
+  /* Manual review runs on working days, so the estimate skips weekends. */
+  function addWorkingDays(ts, days) {
+    var d = new Date(ts);
+    var added = 0;
+    while (added < days) {
+      d.setDate(d.getDate() + 1);
+      var w = d.getDay();
+      if (w !== 0 && w !== 6) added++;
+    }
+    return d;
+  }
+  function reviewWindow() {
+    var from = state.user ? state.user.since : Date.now();
+    var opts = { day: 'numeric', month: 'short' };
+    return {
+      from: addWorkingDays(from, REVIEW_DAYS_MIN).toLocaleDateString(LOCALE, opts),
+      to: addWorkingDays(from, REVIEW_DAYS_MAX).toLocaleDateString(LOCALE, opts)
+    };
+  }
+
   function signOut() {
-    state.user = null; save(); renderChrome(); go('#/shop');
+    stashLedger();
+    state.user = null;
+    state.balance = 0; state.txns = []; state.owned = [];
+    save(); renderChrome(); go('#/shop');
     toast('Signed out', 'Your wallet data stays on this device', 'info');
   }
 
@@ -353,7 +444,9 @@
         '<h1 style="margin-top:18px">Every gift card,<br>one ledger.</h1>' +
         '<p class="lede">A gift card is money locked to one shop. Vaultly accepts any card, voucher or prepaid balance, books it into a single ledger, and lets you draw a new card on any other brand — or cash the balance out.</p>' +
         '<div class="hero-cta">' +
-          '<a class="btn btn-primary btn-lg" href="#/redeem" data-link>Redeem a code</a>' +
+          (state.user
+            ? '<a class="btn btn-primary btn-lg" href="#/redeem" data-link>Redeem a code</a>'
+            : '<a class="btn btn-primary btn-lg" href="#/register" data-link>Open an account</a>') +
           '<a class="btn btn-ghost btn-lg" href="#/about" data-link>Read the concept</a>' +
         '</div>' +
         '<dl class="hero-trust">' +
@@ -531,7 +624,8 @@
               '<a class="btn" href="#/payout" data-link>Payout</a>' +
             '</div>' +
           '</div>' +
-          '<span class="pill pill-stamp">' + ICON.lock + ' Unverified</span>' +
+          '<span class="pill pill-stamp">' + ICON.lock + ' ' +
+            (isPending() ? 'Under review' : 'Verified') + '</span>' +
         '</div>' +
         '<div class="statement-body">' +
           '<div class="stat-grid">' +
@@ -542,6 +636,16 @@
           '</div>' +
         '</div>' +
       '</div>' +
+
+      (isPending()
+        ? '<div class="notice notice-accent" style="margin-top:18px">' + ICON.shield +
+          '<div><div class="notice-title">Account under review · expected ' +
+            reviewWindow().from + ' – ' + reviewWindow().to + '</div>' +
+          '<div class="notice-body">Every registration is checked by a person before payouts open, ' +
+          'which keeps bots and AI agents out of the ledger. Redeeming codes and drawing cards is ' +
+          'unaffected. <a href="#/payout" data-link style="color:var(--green);font-weight:600">See the file</a>.' +
+          '</div></div></div>'
+        : '') +
 
       '<div class="cols-2" style="margin-top:22px">' +
         '<div>' +
@@ -591,14 +695,19 @@
     return '<section class="section">' +
       '<div class="section-head"><div><span class="eyebrow">Payout</span>' +
         '<h1 style="margin-top:16px">Draw the balance out</h1>' +
-        '<p>Settle your ledger balance to a bank account, PayPal, a crypto wallet or a debit card. Funds are released once the support desk has verified the account.</p></div></div>' +
+        '<p>Settle your ledger balance to a bank account, PayPal, a crypto wallet or a debit card. Funds are released once the review of your registration is complete.</p></div></div>' +
 
       '<div class="notice notice-stamp stamped" style="margin-bottom:22px">' + ICON.lock +
-        '<div style="max-width:60ch"><div class="notice-title">Payout held pending verification</div>' +
-        '<div class="notice-body">This account has not been verified, so no balance can leave it. ' +
-        '<strong>You need to be verified by our support team to pay out.</strong> ' +
-        'File a request below and the support desk will review the account.</div></div>' +
-        '<div class="stamp"><div class="stamp-line1">Not verified</div>' +
+        '<div style="max-width:58ch"><div class="notice-title">Payout held — your account is still being verified</div>' +
+        '<div class="notice-body"><strong>Every new registration is reviewed by hand before payouts are released, ' +
+        'and that takes ' + REVIEW_DAYS_MIN + ' to ' + REVIEW_DAYS_MAX + ' working days.</strong> ' +
+        'We do this because scripted bots and AI agents are the main way stored-value accounts get ' +
+        'abused, and a captcha does not stop them. Until the review clears, your balance stays in ' +
+        'the ledger — you can keep redeeming codes and drawing cards in the meantime.</div>' +
+        '<div class="notice-body" style="margin-top:9px">Registered ' +
+          new Date(state.user.since).toLocaleDateString(LOCALE) + ' · review expected ' +
+          reviewWindow().from + ' – ' + reviewWindow().to + '</div></div>' +
+        '<div class="stamp"><div class="stamp-line1">Under review</div>' +
         '<div class="stamp-line2">Payout withheld</div></div>' +
       '</div>' +
 
@@ -624,15 +733,17 @@
         '</div>' +
 
         '<div class="card card-pad">' +
-          '<h3 style="margin-bottom:16px">Verification file</h3>' +
+          '<h3 style="margin-bottom:6px">Verification file</h3>' +
+          '<p class="tiny muted mono" style="margin-bottom:16px">REF ' + esc(refFor(state.user)) + '</p>' +
           '<div class="tracker">' +
-            tstep('done', ICON.check, 'Account opened', new Date(state.user.since).toLocaleDateString()) +
+            tstep('done', ICON.check, 'Registration received', new Date(state.user.since).toLocaleDateString(LOCALE)) +
             tstep('done', ICON.check, 'Email on file', esc(state.user.email)) +
-            tstep('now', '!', 'Identity check', 'Open — the support desk has to verify you') +
-            tstep('', '4', 'Payout released', 'Follows verification') +
+            tstep('now', '!', 'Manual review', 'In progress · expected ' + reviewWindow().from + ' – ' + reviewWindow().to) +
+            tstep('', '4', 'Payout released', 'Once the review clears') +
           '</div>' +
           '<div class="divider"></div>' +
-          '<p class="small muted">A person reviews every file. You will be asked for identification only once, and never by email.</p>' +
+          '<p class="small muted">A person reviews every file — no automated screening, which is the point. ' +
+          'You will be asked for identification only once, and never by email.</p>' +
           '<button class="btn btn-ghost btn-block" style="margin-top:14px" data-act="support">' + ICON.chat + ' Contact the desk</button>' +
         '</div>' +
       '</div>' +
@@ -665,7 +776,7 @@
         '<p>Stored value comes down to two promises: the money is where you left it, and a person is reachable when it is not.</p></div></div>' +
         '<div class="feature-grid">' +
           feature(ICON.shield, 'Debited on issue', 'The ledger only moves when an instrument exists and is on screen. Nothing is taken up front.') +
-          feature(ICON.lock, 'Verified settlement', 'Payouts are reviewed before release. Deliberately slower \u2014 it is what stops a stolen account draining a balance.') +
+          feature(ICON.lock, 'Reviewed by hand', 'Every registration is checked by a person before payouts open. Slower on purpose \u2014 it is what keeps bots and AI agents out of the ledger.') +
           feature(ICON.bolt, 'Issued on confirmation', 'Codes are drawn the second an order clears. No queue, no shipping, no waiting room.') +
           feature(ICON.swap, 'Brand agnostic', 'Twenty-plus brands across shopping, gaming, streaming, prepaid cards and crypto, all in one currency.') +
           feature(ICON.chat, 'Staffed desk', 'Verification, disputes and payouts are handled by people rather than an automated rule.') +
@@ -685,7 +796,8 @@
         '<div class="faq">' +
           faq('Which cards can I present?', 'Any Vaultly code, in any denomination from ' + money(MIN_AMOUNT) + ' upwards. Shopping cards, gaming credit, streaming vouchers, prepaid Visa and Mastercard, PayPal balance and crypto vouchers all resolve into the same ledger balance.') +
           faq('How does the ledger work?', 'Presenting a code credits your balance. Drawing a card in the marketplace debits it and files the new code under instruments held, where you can copy it at any time. Every movement is written to the journal with a running figure, so the balance is always accounted for.') +
-          faq('Why can’t I pay out yet?', 'Payouts are released once the support desk has verified the account. Every new account starts unverified, so the first payout request opens a file and the desk reviews it. Your balance is untouched while it is open — the hold stops a stolen account from being drained.') +
+          faq('Why can’t I pay out yet?', 'Because your registration is still being reviewed. Every new account is checked by a person before payouts are released, which takes ' + REVIEW_DAYS_MIN + ' to ' + REVIEW_DAYS_MAX + ' working days. Your balance is untouched while the review is open, and redeeming codes and drawing cards works normally throughout.') +
+          faq('Why is the review done by hand?', 'Because the alternative does not work. Scripted bots and AI agents are the main way stored-value accounts get abused at scale, and they clear captchas and automated checks routinely. A person looking at each registration is slower, and it is the part of the process that actually holds. It is a one-time check — once your account is cleared it stays cleared.') +
           faq('In which currency are amounts shown?', 'In your own. Vaultly reads the region your browser reports and formats every figure in that currency — euros in the eurozone, pounds in the UK, dollars in the US, and so on.') +
           faq('Do codes expire?', 'No. A code keeps its value until it is presented. Each one is single use: once it has been booked to a ledger it cannot be presented again, which is why the register marks it as redeemed.') +
           faq('What happens to my data?', 'Your ledger, instruments and journal are kept on the device you are using. Nothing you type on this site is transmitted to a third party or sold on.') +
@@ -700,7 +812,49 @@
     return '<details><summary>' + esc(q) + '</summary><p>' + esc(a) + '</p></details>';
   }
 
-  /* --------------------------------------------------------------- login */
+  /* --------------------------------------------------- register & sign in */
+  function reviewExplainer() {
+    return '<div class="notice notice-accent">' + ICON.shield +
+      '<div><div class="notice-title">Every registration is checked by hand</div>' +
+      '<div class="notice-body">Automated sign-ups — scripted bots and AI agents — are how ' +
+      'stored-value accounts get abused at scale. So we do not screen with a captcha and let the ' +
+      'rest through: a person reviews every new account before payouts are released. It takes ' +
+      REVIEW_DAYS_MIN + ' to ' + REVIEW_DAYS_MAX + ' working days. Redeeming codes and drawing ' +
+      'cards works immediately.</div></div></div>';
+  }
+
+  function viewRegister() {
+    return '<section class="auth-wrap auth-wide">' +
+      '<div style="margin-bottom:22px">' +
+        '<span class="eyebrow">Open an account</span>' +
+        '<h2 style="margin-top:12px">Join Vaultly</h2>' +
+        '<p class="small muted" style="margin-top:10px">One ledger for every gift card you hold.</p>' +
+      '</div>' +
+
+      '<div class="card card-pad">' +
+        '<div class="field" style="margin-bottom:14px"><label for="rgName">Name</label>' +
+          '<input id="rgName" class="input" type="text" placeholder="Your name" autocomplete="name"></div>' +
+        '<div class="field" style="margin-bottom:14px"><label for="rgEmail">Email</label>' +
+          '<input id="rgEmail" class="input" type="email" placeholder="you@example.com" autocomplete="email"></div>' +
+        '<div class="field" style="margin-bottom:14px"><label for="rgPass">Password</label>' +
+          '<input id="rgPass" class="input" type="password" placeholder="At least 8 characters" autocomplete="new-password"></div>' +
+        '<div class="field" style="margin-bottom:16px"><label for="rgPass2">Repeat password</label>' +
+          '<input id="rgPass2" class="input" type="password" autocomplete="new-password"></div>' +
+
+        '<label class="check" for="rgAgree">' +
+          '<input type="checkbox" id="rgAgree">' +
+          '<span>I understand that new accounts are reviewed by hand and that payouts are held until the review is complete.</span>' +
+        '</label>' +
+
+        '<button class="btn btn-primary btn-block btn-lg" style="margin-top:18px" data-act="do-register">Open account</button>' +
+        '<p class="tiny muted center" style="margin-top:14px">Already registered? ' +
+          '<a href="#/login" data-link style="color:var(--green);font-weight:600">Sign in</a></p>' +
+      '</div>' +
+
+      '<div style="margin-top:18px">' + reviewExplainer() + '</div>' +
+    '</section>';
+  }
+
   function viewLogin() {
     return '<section class="auth-wrap">' +
       '<div class="card card-pad">' +
@@ -714,6 +868,8 @@
         '<div class="field" style="margin-bottom:16px"><label for="liPass">Password</label>' +
           '<input id="liPass" class="input" type="password" placeholder="••••••••" autocomplete="current-password"></div>' +
         '<button class="btn btn-primary btn-block btn-lg" data-act="do-login">Continue</button>' +
+        '<div class="divider"></div>' +
+        '<a class="btn btn-ghost btn-block" href="#/register" data-link>Open a new account</a>' +
         '<p class="tiny muted center" style="margin-top:16px">Your session is kept on this device only.</p>' +
       '</div>' +
     '</section>';
@@ -809,7 +965,8 @@
     switch (r.name) {
       case 'redeem':  html = viewRedeem(); break;
       case 'about':   html = viewAbout(); break;
-      case 'login':   html = state.user ? (go('#/wallet'), '') : viewLogin(); break;
+      case 'login':    html = state.user ? (go('#/wallet'), '') : viewLogin(); break;
+      case 'register': html = state.user ? (go('#/wallet'), '') : viewRegister(); break;
       case 'console': html = viewConsole(r.arg); break;
       case 'wallet':  if (!requireAuth('#/wallet')) return; html = viewWallet(); break;
       case 'payout':  if (!requireAuth('#/payout')) return; html = viewPayout(); break;
@@ -825,6 +982,10 @@
     closeModal();
     window.scrollTo(0, 0);
     renderChrome();
+    if (pendingModal) {
+      var m = pendingModal; pendingModal = null;
+      openModal(m.title, m.body);
+    }
   }
 
   function renderChrome() {
@@ -836,7 +997,8 @@
     if (note) note.textContent = 'Amounts shown in ' + CURRENCY;
     $('#accountSlot').innerHTML = state.user
       ? '<button class="avatar" data-act="account" title="Account">' + esc(state.user.initials) + '</button>'
-      : '<a class="btn btn-primary btn-sm" href="#/login" data-link>Sign in</a>';
+      : '<a class="btn btn-ghost btn-sm hide-sm" href="#/login" data-link>Sign in</a>' +
+        '<a class="btn btn-primary btn-sm" href="#/register" data-link>Open account</a>';
   }
 
   /* ================================================================ actions */
@@ -928,18 +1090,62 @@
 
         if (ident.toLowerCase() === ADMIN_USER) {
           if (pass !== ADMIN_PASS) { $('#liPass').focus(); toast('Wrong password', null, 'err'); break; }
-          signIn('admin@vaultly.app', 'Administrator', 'admin');
+          signIn({ id: 'admin', email: 'admin@vaultly.app', name: 'Administrator',
+                   since: Date.now(), role: 'admin', review: 'verified' }, 'admin');
           toast('Signed in as administrator');
           go('#/console');
           break;
         }
 
         if (!/^\S+@\S+\.\S+$/.test(ident)) { $('#liEmail').focus(); toast('Enter a valid email address', null, 'err'); break; }
-        signIn(ident);
-        toast('Welcome to Vaultly', state.seeded ? 'Welcome credit booked to your ledger' : null);
+
+        var acc = findAccount(ident);
+        if (!acc) {
+          toast('No account with that email', 'Open an account to get started', 'err');
+          go('#/register');
+          break;
+        }
+        if (acc.pass !== hashPass(pass)) { $('#liPass').focus(); toast('Wrong password', null, 'err'); break; }
+
+        signIn(acc);
+        toast('Signed in', acc.name);
         var next = sessionStorage.getItem('vaultly.next') || '#/wallet';
         sessionStorage.removeItem('vaultly.next');
         go(next);
+        break;
+      }
+
+      case 'do-register': {
+        var rEmail = $('#rgEmail').value.trim();
+        var rName = $('#rgName').value.trim();
+        var rPass = $('#rgPass').value;
+        var rPass2 = $('#rgPass2').value;
+        var rAgree = $('#rgAgree').checked;
+
+        if (!/^\S+@\S+\.\S+$/.test(rEmail)) { $('#rgEmail').focus(); toast('Enter a valid email address', null, 'err'); break; }
+        if (rEmail.toLowerCase() === ADMIN_USER || findAccount(rEmail)) {
+          $('#rgEmail').focus(); toast('That email already has an account', 'Sign in instead', 'err'); break;
+        }
+        if (rPass.length < 8) { $('#rgPass').focus(); toast('Use at least 8 characters', null, 'err'); break; }
+        if (rPass !== rPass2) { $('#rgPass2').focus(); toast('The passwords do not match', null, 'err'); break; }
+        if (!rAgree) { toast('Confirm the review notice to continue', null, 'err'); break; }
+
+        register(rEmail, rName, rPass);
+        var win = reviewWindow();
+        queueModal('Application received', '' +
+          '<div class="notice notice-accent">' + ICON.check +
+            '<div><div class="notice-title">Your account is open</div>' +
+            '<div class="notice-body">You can present codes and draw cards straight away. ' +
+            'Payouts unlock once the review is complete.</div></div></div>' +
+          '<div class="tracker" style="margin-top:18px">' +
+            tstep('done', ICON.check, 'Registration received', new Date(state.user.since).toLocaleDateString(LOCALE)) +
+            tstep('now', '!', 'Manual review', 'Expected ' + win.from + ' – ' + win.to) +
+            tstep('', '3', 'Payouts released', 'Once the review clears') +
+          '</div>' +
+          '<div class="code-row" style="margin-top:16px"><span class="small muted">Reference</span>' +
+            '<span class="mono grow" style="text-align:right">' + esc(refFor(state.user)) + '</span></div>' +
+          '<button class="btn btn-primary btn-block btn-lg" style="margin-top:16px" data-act="close-modal">Open the ledger</button>');
+        go('#/wallet');
         break;
       }
 
@@ -953,7 +1159,8 @@
             '<div class="stat"><div class="k">Balance</div><div class="v">' + money(state.balance) + '</div></div>' +
             '<div class="stat"><div class="k">Role</div><div class="v" style="font-size:14px">' +
               (isAdmin() ? 'Administrator' : 'Member') + '</div></div>' +
-            '<div class="stat"><div class="k">Status</div><div class="v" style="font-size:14px;color:var(--stamp)">Unverified</div></div>' +
+            '<div class="stat"><div class="k">Status</div><div class="v" style="font-size:14px;color:' +
+              (isPending() ? 'var(--stamp)">Under review' : 'var(--green)">Verified') + '</div></div>' +
           '</div>' +
           (isAdmin()
             ? '<a class="btn btn-primary btn-block" style="margin-bottom:8px" href="#/console" data-link data-act="close-modal">Issuing console</a>'
@@ -981,11 +1188,12 @@
         save();
         render();
         openModal('Verification required', '' +
-          '<div class="notice">' + ICON.lock +
-            '<div><div class="notice-title">You need to be verified by our support team to pay out</div>' +
+          '<div class="notice notice-stamp">' + ICON.lock +
+            '<div><div class="notice-title">Your account still needs to be verified</div>' +
             '<div class="notice-body">Your request for ' + money(pAmt) + ' via ' + esc(method.name) +
-            ' is on hold. Support has to verify your account before any balance can leave Vaultly. ' +
-            'Your balance stays untouched until then.</div></div></div>' +
+            ' is on hold. Every registration is reviewed by hand to keep bots and AI agents out, ' +
+            'which takes ' + REVIEW_DAYS_MIN + ' to ' + REVIEW_DAYS_MAX + ' working days — expected ' +
+            reviewWindow().from + ' – ' + reviewWindow().to + '. Your balance is untouched until then.</div></div></div>' +
           '<div class="code-row" style="margin-top:14px"><span class="small muted">Ticket</span>' +
             '<span class="mono grow" style="text-align:right">' + ticket + '</span>' +
             '<button class="icon-btn" style="width:28px;height:28px" data-act="copy" data-text="' + ticket + '">' + ICON.copy + '</button></div>' +
@@ -1107,6 +1315,11 @@
   window.addEventListener('hashchange', render);
 
   /* ================================================================== boot */
+  if (!state.seeded) {
+    state.seeded = true;
+    state.codes.push(newCode(50, 'Welcome batch'), newCode(20, 'Welcome batch'));
+    save();
+  }
   if (state.theme) document.documentElement.setAttribute('data-theme', state.theme);
   $('#year').textContent = new Date().getFullYear();
   render();
