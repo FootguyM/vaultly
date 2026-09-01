@@ -64,6 +64,24 @@ Status, Guthaben und Anzahl gehaltener Karten. **Verify** setzt `review` auf `'v
 damit sind Kauf und Auszahlung für dieses Konto offen. **Revoke** nimmt es zurück,
 das Papierkorb-Symbol löscht Konto samt Ledger.
 
+## Gift-Codes
+
+Ein Code trägt seinen Wert selbst: `VC-` plus 12 Zeichen, davon 3 für den Betrag
+(in 5er-Schritten), 5 Zufall und 4 Prüfsumme über `SIGNING_KEY`. Dadurch kann **jedes
+Gerät einen Code prüfen, das ihn nie gesehen hat** — vorher lag die Liste der gültigen
+Codes nur im `localStorage` des ausgebenden Browsers, weshalb verschickte Codes woanders
+als ungültig galten.
+
+Beim Einlösen wird zuerst das lokale Ausgaberegister befragt (dort steht auch, ob ein Code
+schon benutzt wurde), danach die Signatur des Codes selbst. Auf einem fremden Gerät
+eingelöste Codes landen in `state.spent`, damit sie dort nicht doppelt gutgeschrieben
+werden.
+
+> **Grenzen ohne Server:** `SIGNING_KEY` steht im ausgelieferten Quelltext, ist also kein
+> Geheimnis — die Prüfsumme hält Tippfehler und Rateversuche ab, keinen entschlossenen
+> Fälscher. Und Doppeleinlösung wird nur *pro Gerät* verhindert: derselbe Code lässt sich
+> auf zwei Geräten je einmal einlösen. Beides braucht eine serverseitige Prüfung.
+
 Der Speicherschlüssel heißt `vaultcards.state.v1`. Beim ersten Laden nach dem Rebranding
 wird ein vorhandener Stand aus `vaultly.state.v1` übernommen; Codes mit dem alten Präfix
 `VLT-` bleiben einlösbar (`CODE_PREFIXES` in `app.js`), neue tragen `VC-`.

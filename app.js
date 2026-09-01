@@ -71,7 +71,8 @@
     balance: 0,      /* the active ledger — swapped in and out on sign-in */
     txns: [],
     owned: [],
-    codes: [],       /* issued instruments, shared across the installation */
+    codes: [],       /* instruments issued on this device */
+    spent: [],       /* codes verified by signature and already credited here */
     payouts: [],
     theme: null,
     seeded: false
@@ -160,8 +161,64 @@
     }
     return out;
   }
+  /* Codes carry their own value and a checksum, so a device that has never
+     seen a code can still verify it. Without this, an issued code only worked
+     in the browser that created it — localStorage does not travel.
+     SIGNING_KEY ships in the page and is therefore not a secret: it stops
+     typos and casual guesses, not a determined forger. Only a server can do
+     that, and the same goes for spending a code twice on two devices. */
+  var SIGNING_KEY = 'vc-issue-2f9x';
+
+  function toBase32(n, len) {
+    var s = '';
+    for (var i = 0; i < len; i++) { s = ALPHABET[n % 32] + s; n = Math.floor(n / 32); }
+    return s;
+  }
+  function fromBase32(s) {
+    var n = 0;
+    for (var i = 0; i < s.length; i++) {
+      var v = ALPHABET.indexOf(s.charAt(i));
+      if (v < 0) return -1;
+      n = n * 32 + v;
+    }
+    return n;
+  }
+  function checksumFor(core) {
+    var h = 2166136261, s = core + SIGNING_KEY;
+    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; }
+    return toBase32(h % 1048576, 4);          /* 32^4 */
+  }
+  function groupCode(prefix, body) {
+    return prefix + '-' + (body.match(/.{1,4}/g) || []).join('-');
+  }
+
+  /* Codes for cards the customer bought: shown and copied, never presented
+     back here, so they carry no value signature. */
   function makeCode(prefix) {
-    return (prefix || CODE_PREFIX) + '-' + block(4) + '-' + block(4) + '-' + block(4);
+    return groupCode(prefix || CODE_PREFIX, block(12));
+  }
+
+  /* head(3) = amount in steps · random(5) · checksum(4) */
+  function makeValueCode(amount) {
+    var core = toBase32(Math.round(amount / STEP), 3) + block(5);
+    return groupCode(CODE_PREFIX, core + checksumFor(core));
+  }
+
+  /* Returns the face value a code declares, or null if it is not one of ours. */
+  function valueOf(input) {
+    var raw = normalise(input);
+    for (var i = 0; i < CODE_PREFIXES.length; i++) {
+      var pre = CODE_PREFIXES[i];
+      if (raw.indexOf(pre) !== 0) continue;
+      var body = raw.slice(pre.length);
+      if (body.length !== 12) continue;
+      var core = body.slice(0, 8);
+      if (checksumFor(core) !== body.slice(8)) continue;
+      var amount = fromBase32(core.slice(0, 3)) * STEP;
+      if (amount < MIN_AMOUNT || amount > 100000) continue;
+      return amount;
+    }
+    return null;
   }
   function normalise(v) {
     return String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -399,7 +456,7 @@
   }
 
   function newCode(amount, label) {
-    return { code: makeCode(), amount: amount, label: label || '', created: Date.now(), redeemed: null };
+    return { code: makeValueCode(amount), amount: amount, label: label || '', created: Date.now(), redeemed: null };
   }
 
   function findCode(input) {
@@ -410,16 +467,36 @@
     return null;
   }
 
-  function redeem(input) {
-    var entry = findCode(input);
-    if (!entry) return { ok: false, msg: 'That code is not valid', sub: 'Check the characters and try again' };
-    if (entry.redeemed) return { ok: false, msg: 'Code already redeemed', sub: 'Used ' + timeAgo(entry.redeemed) };
-    entry.redeemed = Date.now();
-    entry.redeemedBy = state.user ? state.user.email : 'guest';
-    state.balance += entry.amount;
-    state.txns.unshift(tx('in', 'Code presented', entry.code, entry.amount));
+  function credit(code, amount) {
+    state.balance += amount;
+    state.txns.unshift(tx('in', 'Code presented', code, amount));
+    stashLedger();
     save();
-    return { ok: true, amount: entry.amount };
+  }
+
+  function redeem(input) {
+    var typed = normalise(input);
+
+    /* Issued on this device: the register knows it and tracks its state. */
+    var entry = findCode(input);
+    if (entry) {
+      if (entry.redeemed) return { ok: false, msg: 'Code already redeemed', sub: 'Used ' + timeAgo(entry.redeemed) };
+      entry.redeemed = Date.now();
+      entry.redeemedBy = state.user ? state.user.email : 'guest';
+      credit(entry.code, entry.amount);
+      return { ok: true, amount: entry.amount };
+    }
+
+    /* Issued elsewhere: verify the code itself. */
+    if (state.spent.indexOf(typed) > -1) {
+      return { ok: false, msg: 'Code already redeemed', sub: 'This code has been used on this device' };
+    }
+    var amount = valueOf(typed);
+    if (amount === null) return { ok: false, msg: 'That code is not valid', sub: 'Check the characters and try again' };
+
+    state.spent.push(typed);
+    credit(groupCode(typed.slice(0, CODE_PREFIX.length), typed.slice(CODE_PREFIX.length)), amount);
+    return { ok: true, amount: amount };
   }
 
   function buy(brandId, amount) {
