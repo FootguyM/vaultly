@@ -407,7 +407,17 @@ svg{fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stro
 .stamp-line1{font-size:12px; font-weight:600; color:var(--hold); letter-spacing:.02em; text-transform:uppercase}
 .stamp-line2{font-size:10px; color:var(--hold); opacity:.72; margin-top:2px}
 @media (max-width:680px){
-  .stamp{margin:12px 0 0; border-left:0; padding-left:0; text-align:left; width:100%}
+  /* A flex item cannot break its own line with width alone — it just steals
+     width from the text beside it. Wrap the row and give the block a full
+     basis so it drops underneath instead. */
+  .notice.stamped{flex-wrap:wrap}
+  .notice.stamped > div{flex:1 1 190px; min-width:0}
+  .stamp{
+    flex:1 0 100%; margin:12px 0 0; padding:11px 0 0; text-align:left;
+    border-left:0; border-top:1px solid var(--hold);
+    display:flex; align-items:baseline; gap:10px;
+  }
+  .stamp-line2{margin-top:0}
 }
 
 .method-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}

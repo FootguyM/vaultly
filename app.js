@@ -277,6 +277,27 @@
 
   function refFor(u) { return 'VR-' + String(u.id).toUpperCase().slice(0, 6); }
 
+  /* The signed-in member's ledger lives at the top of state; every other
+     account carries its own copy. Read whichever is authoritative. */
+  function ledgerOf(acc) {
+    if (state.user && state.user.role !== 'admin' && state.user.email === acc.email) {
+      return { balance: state.balance, txns: state.txns, owned: state.owned };
+    }
+    return acc.ledger || { balance: 0, txns: [], owned: [] };
+  }
+  function accountById(id) {
+    for (var i = 0; i < state.accounts.length; i++) if (state.accounts[i].id === id) return state.accounts[i];
+    return null;
+  }
+  function setReview(id, status) {
+    var acc = accountById(id);
+    if (!acc) return null;
+    acc.review = status;
+    if (state.user && state.user.email === acc.email) state.user.review = status;
+    save();
+    return acc;
+  }
+
   function findAccount(email) {
     var want = String(email).trim().toLowerCase();
     for (var i = 0; i < state.accounts.length; i++) {
@@ -746,7 +767,7 @@
     return '<section class="section">' +
       '<div class="section-head"><div><span class="eyebrow">Payout</span>' +
         '<h1 style="margin-top:10px">Draw the balance out</h1>' +
-        '<p>Settle your ledger balance to a bank account, PayPal, a crypto wallet or a debit card. Funds are released once the review of your registration is complete.</p></div></div>' +
+        '<p>Settle your ledger balance to Cash App, PayPal or a crypto wallet. Funds are released once the review of your registration is complete.</p></div></div>' +
 
       '<div class="notice notice-stamp stamped" style="margin-bottom:22px">' + ICON.lock +
         '<div style="max-width:58ch"><div class="notice-title">Payout held — your account is still being verified</div>' +
@@ -925,7 +946,8 @@
       '<div class="console-bar" style="margin-bottom:24px">' +
         ICON.key + '<div><div class="wordmark">Issuing console</div>' +
         '<div class="tiny" style="opacity:.62;font-family:var(--mono);letter-spacing:.08em">RESTRICTED · ADMINISTRATORS ONLY</div></div>' +
-        '<span class="pill" style="margin-left:auto">' + issued + ' issued</span>' +
+        '<span class="pill" style="margin-left:auto">' + state.accounts.length + ' accounts</span>' +
+        '<span class="pill">' + issued + ' issued</span>' +
         '<span class="pill">' + used + ' redeemed</span>' +
         '<span class="pill">' + money(outstanding) + ' outstanding</span>' +
       '</div>' +
@@ -934,7 +956,7 @@
         '<div class="card card-pad">' +
           '<h3 style="margin-bottom:16px">Draw new instruments</h3>' +
           '<div class="row wrap" style="gap:12px;align-items:flex-end">' +
-            '<div class="field grow" style="min-width:120px"><label for="genAmt">Denomination (USD)</label>' +
+            '<div class="field grow" style="min-width:120px"><label for="genAmt">Denomination (' + CURRENCY + ')</label>' +
               '<input id="genAmt" class="input" type="number" min="1" step="1" value="50"></div>' +
             '<div class="field" style="width:110px"><label for="genQty">Quantity</label>' +
               '<input id="genQty" class="input" type="number" min="1" max="50" step="1" value="1"></div>' +
@@ -954,6 +976,20 @@
       '</div>' +
 
       '<div class="card card-pad" style="margin-top:18px">' +
+        '<div class="spread" style="margin-bottom:12px"><h3>Accounts</h3>' +
+          '<span class="caps">' + state.accounts.length + ' registered · ' +
+            state.accounts.filter(function (x) { return x.review === 'pending'; }).length + ' awaiting review</span>' +
+        '</div>' +
+        (state.accounts.length
+          ? '<div class="table-wrap"><table class="table"><thead><tr>' +
+              '<th>Account</th><th>Opened</th><th>Status</th><th>Balance</th><th>Cards</th><th></th>' +
+            '</tr></thead><tbody>' +
+            state.accounts.slice().reverse().map(accountRow).join('') +
+          '</tbody></table></div>'
+          : '<div class="empty">No accounts registered yet.</div>') +
+      '</div>' +
+
+      '<div class="card card-pad" style="margin-top:18px">' +
         '<div class="spread" style="margin-bottom:12px"><h3>Issue register</h3>' +
           (issued ? '<button class="btn btn-ghost btn-sm" data-act="copy-all">' + ICON.copy + ' Copy unused</button>' : '') +
         '</div>' +
@@ -964,6 +1000,27 @@
           : '<div class="empty">Nothing issued yet.</div>') +
       '</div>' +
     '</section>';
+  }
+
+  function accountRow(acc) {
+    var l = ledgerOf(acc);
+    var pending = acc.review === 'pending';
+    return '<tr>' +
+      '<td><div style="font-weight:600">' + esc(acc.name) + '</div>' +
+        '<div class="mono tiny muted">' + esc(acc.email) + '</div></td>' +
+      '<td class="mono">' + new Date(acc.since).toLocaleDateString(LOCALE) + '</td>' +
+      '<td>' + (pending
+        ? '<span class="pill pill-warn">' + ICON.lock + ' Under review</span>'
+        : '<span class="pill pill-success">' + ICON.check + ' Verified</span>') + '</td>' +
+      '<td class="mono">' + money(l.balance) + '</td>' +
+      '<td class="mono">' + (l.owned ? l.owned.length : 0) + '</td>' +
+      '<td style="text-align:right;white-space:nowrap">' +
+        (pending
+          ? '<button class="btn btn-primary btn-sm" data-act="verify-acc" data-id="' + acc.id + '">Verify</button> '
+          : '<button class="btn btn-ghost btn-sm" data-act="unverify-acc" data-id="' + acc.id + '">Revoke</button> ') +
+        '<button class="icon-btn" style="width:28px;height:28px;display:inline-grid;vertical-align:middle" ' +
+          'data-act="del-acc" data-id="' + acc.id + '" title="Delete account">' + ICON.trash + '</button>' +
+      '</td></tr>';
   }
 
   function codeRow(c) {
@@ -1243,7 +1300,7 @@
         openModal('Support', '' +
           '<div class="notice notice-accent">' + ICON.chat +
             '<div><div class="notice-title">A person reviews every file</div>' +
-            '<div class="notice-body">Reach the team at <strong>support@vaultcards.app</strong> and quote your ticket. ' +
+            '<div class="notice-body">Reach the team at <strong>vaultcardsix@proton.me</strong> and quote your ticket. ' +
             'Typical response time is under 24 hours.</div></div></div>' +
           '<p class="small muted" style="margin-top:14px">Quote your ticket number so the desk can find your file straight away.</p>' +
           '<button class="btn btn-ghost btn-block" style="margin-top:12px" data-act="close-modal">Close</button>');
@@ -1286,6 +1343,31 @@
         el.innerHTML = showing ? ICON.eye : ICON.eyeOff;
         el.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
         el.setAttribute('title', showing ? 'Show password' : 'Hide password');
+        break;
+      }
+
+      case 'verify-acc': {
+        var vacc = setReview(el.dataset.id, 'verified');
+        if (vacc) { render(); toast('Account verified', vacc.email); }
+        break;
+      }
+
+      case 'unverify-acc': {
+        var uacc = setReview(el.dataset.id, 'pending');
+        if (uacc) { render(); toast('Verification revoked', uacc.email, 'info'); }
+        break;
+      }
+
+      case 'del-acc': {
+        var dacc = accountById(el.dataset.id);
+        if (!dacc) break;
+        if (!confirm('Delete ' + dacc.email + '? The account, its ledger and its instruments are removed. This cannot be undone.')) break;
+        if (state.user && state.user.email === dacc.email) {
+          state.user = null; state.balance = 0; state.txns = []; state.owned = [];
+        }
+        state.accounts = state.accounts.filter(function (x) { return x.id !== dacc.id; });
+        save(); render(); renderChrome();
+        toast('Account deleted', dacc.email, 'info');
         break;
       }
 

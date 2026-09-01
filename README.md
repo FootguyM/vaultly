@@ -42,7 +42,7 @@ python3 -m http.server 8080   # danach http://localhost:8080 öffnen
 | Konzept | `#/about` | Die Idee dahinter, Vertrauensargumente und FAQ. |
 | Registrierung | `#/register` | E-Mail und Passwort (min. 8 Zeichen), mit Auge-Symbol zum Einblenden. Der Anzeigename ist automatisch der Teil vor dem `@`. Legt ein Konto mit Status `pending` und leerem Ledger an. |
 | Login | `#/login` | Prüft E-Mail gegen die registrierten Konten. Unbekannte Adressen werden zur Registrierung geleitet. Der Benutzername `admin` verlangt das Admin-Passwort. |
-| Ausgabe-Konsole | `#/console` | Nur für Administratoren. Erzeugt einzeln gültige Gift-Codes mit beliebigem Wert, listet alle ausgegebenen Codes mit Status. Auch über den privaten Link `#/console/vt-9f2k-console` erreichbar. |
+| Ausgabe-Konsole | `#/console` | Nur für Administratoren. Konto-Übersicht (Status, Guthaben, gehaltene Karten) mit Freigeben, Widerrufen und Löschen; erzeugt Gift-Codes mit beliebigem Wert und listet alle ausgegebenen Codes mit Status. Auch über den privaten Link `#/console/vt-9f2k-console` erreichbar. |
 
 ## Konten und Verifizierung
 
@@ -59,9 +59,10 @@ dauert. Das erwartete Datum wird aus dem Registrierungszeitpunkt berechnet, Woch
 werden übersprungen (`addWorkingDays` / `reviewWindow`). Die Fristen stehen als
 `REVIEW_DAYS_MIN` / `REVIEW_DAYS_MAX` oben in `app.js`.
 
-Es gibt keinen Freischalt-Mechanismus: `pending` bleibt bestehen, weil ohne Backend
-niemand prüfen kann. Wer den Status zum Testen ändern will, setzt `review` auf `'verified'`
-im jeweiligen Eintrag in `state.accounts`.
+Freigeschaltet wird in der Konsole: Die Konto-Tabelle listet jedes registrierte Konto mit
+Status, Guthaben und Anzahl gehaltener Karten. **Verify** setzt `review` auf `'verified'` —
+damit sind Kauf und Auszahlung für dieses Konto offen. **Revoke** nimmt es zurück,
+das Papierkorb-Symbol löscht Konto samt Ledger.
 
 Der Speicherschlüssel heißt `vaultcards.state.v1`. Beim ersten Laden nach dem Rebranding
 wird ein vorhandener Stand aus `vaultly.state.v1` übernommen; Codes mit dem alten Präfix
